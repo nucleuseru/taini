@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ContinueWithGoogle } from "./continue-with-google";
-import { CurrentYear } from "./current_year";
+import { CurrentYear } from "./current-year";
 
 export default function AuthPage() {
   return (
