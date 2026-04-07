@@ -9,4 +9,9 @@ export default defineConfig(
   ...nextVitals,
   ...nextTs,
   reactCompiler.configs.recommended,
+  {
+    rules: {
+      "@typescript-eslint/require-await": "off",
+    },
+  },
 );

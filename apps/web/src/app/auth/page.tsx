@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ContinueWithGoogle } from "./continue-with-google";
+import { CurrentYear } from "./current_year";
 
-export default async function AuthPage() {
-  "use cache";
-
+export default function AuthPage() {
   return (
     <main className="flex h-svh flex-col items-center justify-center space-y-12 p-4">
       <div className="text-center">
@@ -36,7 +36,7 @@ export default async function AuthPage() {
           </CardAction>
           <div className="relative mt-8 w-full">
             <Separator />
-            <div className="text-muted-foreground bg-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 text-xs uppercase">
+            <div className="text-muted-foreground bg-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 text-xs tracking-widest uppercase">
               Secure Access
             </div>
           </div>
@@ -56,7 +56,10 @@ export default async function AuthPage() {
       </Card>
 
       <div className="text-muted-foreground text-sm uppercase">
-        Editorial grade AI - {new Date().getFullYear()}
+        Editorial grade AI -{" "}
+        <Suspense>
+          <CurrentYear />
+        </Suspense>
       </div>
     </main>
   );

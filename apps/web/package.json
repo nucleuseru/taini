@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint . --fix",
+    "clean": "rm -fr node_modules",
+    "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.11.4",

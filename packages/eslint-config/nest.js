@@ -12,7 +12,9 @@ export default defineConfig(
       },
       sourceType: "commonjs",
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ["*.js", "*.mjs", "*.cjs"],
+        },
         tsconfigRootDir: process.cwd(),
       },
     },
