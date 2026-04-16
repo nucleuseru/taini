@@ -5,6 +5,14 @@ const optional = <Type, FieldPaths extends string = never>(
   validator: Validator<Type, "required", FieldPaths>,
 ) => v.optional(v.nullable(validator));
 
+const generationStatus = v.union(
+  v.literal("pending"),
+  v.literal("queued"),
+  v.literal("generating"),
+  v.literal("completed"),
+  v.literal("failed"),
+);
+
 export const ProjectSchema = {
   userId: v.string(),
   name: v.string(),
@@ -18,7 +26,7 @@ export const ImageSchema = {
   file: optional(v.id("_storage")),
   referenceImages: optional(v.array(v.id("_storage"))),
   illustration: optional(v.boolean()),
-  status: optional(v.string()),
+  status: optional(generationStatus),
 };
 
 export const VideoSchema = {
@@ -30,7 +38,7 @@ export const VideoSchema = {
   referenceAudio: optional(v.id("_storage")),
   referenceVideo: optional(v.id("_storage")),
   referenceImages: optional(v.array(v.id("_storage"))),
-  status: optional(v.string()),
+  status: optional(generationStatus),
 };
 
 export const AudioSchema = {
@@ -47,7 +55,7 @@ export const AudioSchema = {
       }),
     ),
   ),
-  status: optional(v.string()),
+  status: optional(generationStatus),
 };
 
 export const VoiceSchema = {
@@ -55,7 +63,7 @@ export const VoiceSchema = {
   name: optional(v.string()),
   uploaded: optional(v.boolean()),
   file: optional(v.id("_storage")),
-  status: optional(v.string()),
+  status: optional(generationStatus),
 };
 
 export const CharacterSchema = {
