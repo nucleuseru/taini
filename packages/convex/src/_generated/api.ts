@@ -8,8 +8,22 @@
  * @module
  */
 
+import type * as audio from "../audio.js";
 import type * as auth from "../auth.js";
+import type * as character from "../character.js";
+import type * as environment from "../environment.js";
+import type * as function_ from "../function.js";
+import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
+import type * as image from "../image.js";
+import type * as project from "../project.js";
+import type * as scene from "../scene.js";
+import type * as shot from "../shot.js";
+import type * as storyboard from "../storyboard.js";
+import type * as triggers from "../triggers.js";
+import type * as upload from "../upload.js";
+import type * as video from "../video.js";
+import type * as voice from "../voice.js";
 
 import type {
   ApiFromModules,
@@ -19,8 +33,22 @@ import type {
 import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
+  audio: typeof audio;
   auth: typeof auth;
+  character: typeof character;
+  environment: typeof environment;
+  function: typeof function_;
+  helpers: typeof helpers;
   http: typeof http;
+  image: typeof image;
+  project: typeof project;
+  scene: typeof scene;
+  shot: typeof shot;
+  storyboard: typeof storyboard;
+  triggers: typeof triggers;
+  upload: typeof upload;
+  video: typeof video;
+  voice: typeof voice;
 }> = anyApi as any;
 
 /**
