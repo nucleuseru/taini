@@ -3,9 +3,9 @@ import { authMutation, authQuery } from "./function";
 import { EnvironmentFields } from "./schema";
 
 export const get = authQuery({
-  args: { environmentId: v.id("environment") },
+  args: { id: v.id("environment") },
   handler: (ctx, args) => {
-    return ctx.db.get(args.environmentId);
+    return ctx.db.get(args.id);
   },
 });
 
@@ -40,8 +40,8 @@ export const create = authMutation({
 
 export const update = authMutation({
   args: {
+    id: v.id("environment"),
     name: EnvironmentFields.name,
-    environmentId: v.id("environment"),
     weather: EnvironmentFields.weather,
     location: EnvironmentFields.location,
     timeOfDay: EnvironmentFields.timeOfDay,
@@ -49,29 +49,29 @@ export const update = authMutation({
     description: EnvironmentFields.description,
   },
   handler: async (ctx, args) => {
-    const { environmentId, ...fields } = args;
-    await ctx.db.patch(environmentId, fields);
+    const { id, ...fields } = args;
+    await ctx.db.patch(id, fields);
   },
 });
 
 export const remove = authMutation({
-  args: { environmentId: v.id("environment") },
+  args: { id: v.id("environment") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.environmentId);
+    await ctx.db.delete(args.id);
   },
 });
 
 export const addReferenceImage = authMutation({
   args: {
-    environmentId: v.id("environment"),
+    id: v.id("environment"),
     ...EnvironmentFields.referenceImages.element.fields,
   },
   handler: async (ctx, args) => {
-    const { environmentId, ...imageRef } = args;
-    const environment = await ctx.db.get(environmentId);
+    const { id, ...imageRef } = args;
+    const environment = await ctx.db.get(id);
     if (!environment) throw new Error("Environment not found");
 
-    await ctx.db.patch(environmentId, {
+    await ctx.db.patch(id, {
       referenceImages: [...environment.referenceImages, imageRef],
     });
   },

@@ -3,9 +3,9 @@ import { authMutation, authQuery } from "./function";
 import { ShotFields } from "./schema";
 
 export const get = authQuery({
-  args: { shotId: v.id("shot") },
+  args: { id: v.id("shot") },
   handler: (ctx, args) => {
-    return ctx.db.get(args.shotId);
+    return ctx.db.get(args.id);
   },
 });
 
@@ -40,15 +40,15 @@ export const create = authMutation({
 
 export const update = authMutation({
   args: {
-    shotId: v.id("shot"),
+    id: v.id("shot"),
     order: v.optional(ShotFields.order),
     duration: v.optional(ShotFields.duration),
     selectedFirstFrame: v.optional(ShotFields.selectedFirstFrame),
     selectedVideoClip: v.optional(ShotFields.selectedVideoClip),
   },
   handler: async (ctx, args) => {
-    const { shotId, ...fields } = args;
-    await ctx.db.patch(shotId, fields);
+    const { id, ...fields } = args;
+    await ctx.db.patch(id, fields);
   },
 });
 
@@ -61,15 +61,15 @@ export const remove = authMutation({
 
 export const addFirstFrame = authMutation({
   args: {
-    shotId: v.id("shot"),
+    id: v.id("shot"),
     imageId: v.id("image"),
   },
   handler: async (ctx, args) => {
-    const shot = await ctx.db.get(args.shotId);
+    const shot = await ctx.db.get(args.id);
     if (!shot) throw new Error("Shot not found");
 
     const firstFrames = shot.firstFrames ?? [];
-    await ctx.db.patch(args.shotId, {
+    await ctx.db.patch(args.id, {
       firstFrames: [...firstFrames, args.imageId],
     });
   },

@@ -4,9 +4,9 @@ import { authMutation, authQuery } from "./function";
 import { VideoFields } from "./schema";
 
 export const get = authQuery({
-  args: { videoId: v.id("video") },
+  args: { id: v.id("video") },
   handler: async (ctx, args) => {
-    const video = await ctx.db.get("video", args.videoId);
+    const video = await ctx.db.get("video", args.id);
 
     if (!video) return;
 

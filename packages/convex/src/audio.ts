@@ -4,11 +4,9 @@ import { authMutation, authQuery } from "./function";
 import { AudioFields } from "./schema";
 
 export const get = authQuery({
-  args: {
-    audioId: v.id("audio"),
-  },
+  args: { id: v.id("audio") },
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get("audio", args.audioId);
+    const audio = await ctx.db.get("audio", args.id);
 
     if (!audio) return;
 

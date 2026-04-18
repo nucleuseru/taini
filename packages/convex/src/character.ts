@@ -3,9 +3,9 @@ import { authMutation, authQuery } from "./function";
 import { CharacterFields } from "./schema";
 
 export const get = authQuery({
-  args: { characterId: v.id("character") },
+  args: { id: v.id("character") },
   handler: (ctx, args) => {
-    return ctx.db.get(args.characterId);
+    return ctx.db.get(args.id);
   },
 });
 
@@ -41,38 +41,38 @@ export const create = authMutation({
 
 export const update = authMutation({
   args: {
+    id: v.id("character"),
     age: CharacterFields.age,
     voice: CharacterFields.voice,
-    characterId: v.id("character"),
     name: v.optional(CharacterFields.name),
     appearance: CharacterFields.appearance,
     description: CharacterFields.description,
     personality: CharacterFields.personality,
   },
   handler: async (ctx, args) => {
-    const { characterId, ...fields } = args;
-    await ctx.db.patch(characterId, fields);
+    const { id, ...fields } = args;
+    await ctx.db.patch(id, fields);
   },
 });
 
 export const remove = authMutation({
-  args: { characterId: v.id("character") },
+  args: { id: v.id("character") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.characterId);
+    await ctx.db.delete(args.id);
   },
 });
 
 export const addReferenceImage = authMutation({
   args: {
-    characterId: v.id("character"),
+    id: v.id("character"),
     ...CharacterFields.referenceImages.element.fields,
   },
   handler: async (ctx, args) => {
-    const { characterId, ...imageRef } = args;
-    const character = await ctx.db.get(characterId);
+    const { id, ...imageRef } = args;
+    const character = await ctx.db.get(id);
     if (!character) throw new Error("Character not found");
 
-    await ctx.db.patch(characterId, {
+    await ctx.db.patch(id, {
       referenceImages: [...character.referenceImages, imageRef],
     });
   },

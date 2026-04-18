@@ -5,10 +5,10 @@ import { VoiceFields } from "./schema";
 
 export const get = authQuery({
   args: {
-    voiceId: v.id("voice"),
+    id: v.id("voice"),
   },
   handler: async (ctx, args) => {
-    const voice = await ctx.db.get("voice", args.voiceId);
+    const voice = await ctx.db.get("voice", args.id);
 
     if (!voice) return;
 

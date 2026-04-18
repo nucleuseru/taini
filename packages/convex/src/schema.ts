@@ -239,8 +239,6 @@ export const StoryboardFields = {
   projectId: v.id("project"),
   /** The raw script text. */
   script: optional(v.string()),
-  /** AI-extracted or manually written narrative structure. */
-  narrative: optional(v.string()),
 };
 
 /**

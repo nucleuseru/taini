@@ -4,9 +4,9 @@ import { authMutation, authQuery } from "./function";
 import { ImageFields } from "./schema";
 
 export const get = authQuery({
-  args: { imageId: v.id("image") },
+  args: { id: v.id("image") },
   handler: async (ctx, args) => {
-    const image = await ctx.db.get("image", args.imageId);
+    const image = await ctx.db.get("image", args.id);
 
     if (!image) return;
 

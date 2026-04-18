@@ -4,13 +4,9 @@ import { authMutation, authQuery } from "./function";
 import { ProjectFields } from "./schema";
 
 export const get = authQuery({
-  args: {
-    projectId: v.id("project"),
-  },
-  handler: async (cxt, args) => {
-    const project = await cxt.db.get("project", args.projectId);
-
-    return project;
+  args: { id: v.id("project") },
+  handler: (cxt, args) => {
+    return cxt.db.get("project", args.id);
   },
 });
 
