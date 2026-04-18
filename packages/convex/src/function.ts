@@ -3,17 +3,9 @@ import {
   customCtx,
   customMutation,
   customQuery,
-  NoOp,
 } from "convex-helpers/server/customFunctions";
 import {
-  zCustomAction,
-  zCustomMutation,
-  zCustomQuery,
-} from "convex-helpers/server/zod4";
-import {
   action,
-  internalAction,
-  internalQuery,
   query,
   /* eslint-disable no-restricted-imports */
   internalMutation as rawInternalMutation,
@@ -51,7 +43,3 @@ export const authAction = customAction(
     return { user };
   }),
 );
-
-export const zodInternalQuery = zCustomQuery(internalQuery, NoOp);
-export const zodInternalMutation = zCustomMutation(internalMutation, NoOp);
-export const zodInternalAction = zCustomAction(internalAction, NoOp);

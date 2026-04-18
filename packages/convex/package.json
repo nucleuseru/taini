@@ -11,7 +11,10 @@
     "clean": "rm -fr node_modules"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.64",
+    "@convex-dev/agent": "^0.6.1",
     "@convex-dev/better-auth": "^0.11.4",
+    "ai": "^6.0.168",
     "better-auth": "1.5.3",
     "convex": "^1.34.1",
     "convex-helpers": "^0.1.114",
