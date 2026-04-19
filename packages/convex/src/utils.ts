@@ -1,4 +1,5 @@
 import { v, Validator } from "convex/values";
+import { ActionCtx } from "./_generated/server";
 
 export const optional = <Type, FieldPaths extends string = never>(
   validator: Validator<Type, "required", FieldPaths>,
@@ -12,3 +13,15 @@ export const generationStatusValidator = v.union(
 );
 
 export const sortOrderValidator = v.union(v.literal("asc"), v.literal("desc"));
+
+export interface RunQueryCtx {
+  runQuery: ActionCtx["runQuery"];
+}
+
+export interface RunMutationCtx {
+  runMutation: ActionCtx["runMutation"];
+}
+
+export interface RunActionCtx {
+  runAction: ActionCtx["runAction"];
+}

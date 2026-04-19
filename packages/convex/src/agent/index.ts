@@ -2,12 +2,12 @@ import { google } from "@ai-sdk/google";
 import { Agent, stepCountIs } from "@convex-dev/agent";
 import { components } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
-import { ActionCtx } from "../_generated/server";
+import { RunMutationCtx, RunQueryCtx } from "../utils";
 import { SYSTEM_PROMPT } from "./prompt";
 import * as tools from "./tools";
 
 export const createAgent = (
-  ctx: ActionCtx,
+  ctx: RunQueryCtx & RunMutationCtx,
   options: {
     script: string;
     projectName: string;

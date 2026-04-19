@@ -240,7 +240,8 @@ export const StoryboardFields = {
   /** Reference to the project this storyboard belongs to. */
   projectId: v.id("project"),
   /** The raw script text. */
-  script: optional(v.string()),
+  script: v.string(),
+  threadId: optional(v.string()),
 };
 
 /**

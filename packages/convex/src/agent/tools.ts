@@ -3,18 +3,18 @@ import { convexToZod, zid } from "convex-helpers/server/zod4";
 import { z } from "zod";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
-import { ActionCtx } from "../_generated/server";
 import * as Audio from "../audio";
 import * as Character from "../character";
 import * as Environment from "../environment";
 import * as Image from "../image";
 import * as Scene from "../scene";
 import * as Shot from "../shot";
+import { RunMutationCtx, RunQueryCtx } from "../utils";
 import * as Video from "../video";
 
 // --- Image Tools ---
 
-export const getImagesByIdTool = (ctx: ActionCtx) =>
+export const getImagesByIdTool = (ctx: RunQueryCtx) =>
   tool({
     description: "Get one or more images by their IDs",
     inputSchema: z.object({ ids: z.array(zid("image")) }),
@@ -26,7 +26,7 @@ export const getImagesByIdTool = (ctx: ActionCtx) =>
     },
   });
 
-export const listImagesTool = (ctx: ActionCtx, projectId: Id<"project">) =>
+export const listImagesTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({
     description: "List images in a project",
     inputSchema: z.object({
@@ -44,7 +44,10 @@ export const listImagesTool = (ctx: ActionCtx, projectId: Id<"project">) =>
     },
   });
 
-export const generateImagesTool = (ctx: ActionCtx, projectId: Id<"project">) =>
+export const generateImagesTool = (
+  ctx: RunMutationCtx,
+  projectId: Id<"project">,
+) =>
   tool({
     description:
       "Generate one or more new images based on prompts and project context",
@@ -67,7 +70,7 @@ export const generateImagesTool = (ctx: ActionCtx, projectId: Id<"project">) =>
 
 // --- Audio Tools ---
 
-export const getAudiosByIdTool = (ctx: ActionCtx) =>
+export const getAudiosByIdTool = (ctx: RunQueryCtx) =>
   tool({
     description: "Get one or more audio assets by their IDs",
     inputSchema: z.object({ ids: z.array(zid("audio")) }),
@@ -79,7 +82,7 @@ export const getAudiosByIdTool = (ctx: ActionCtx) =>
     },
   });
 
-export const listAudiosTool = (ctx: ActionCtx, projectId: Id<"project">) =>
+export const listAudiosTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({
     description: "List audio assets in a project",
     inputSchema: z.object({
@@ -97,7 +100,10 @@ export const listAudiosTool = (ctx: ActionCtx, projectId: Id<"project">) =>
     },
   });
 
-export const generateAudiosTool = (ctx: ActionCtx, projectId: Id<"project">) =>
+export const generateAudiosTool = (
+  ctx: RunMutationCtx,
+  projectId: Id<"project">,
+) =>
   tool({
     description:
       "Generate one or more new audio assets (multi speaker audio or voice over)",
@@ -120,7 +126,7 @@ export const generateAudiosTool = (ctx: ActionCtx, projectId: Id<"project">) =>
 
 // --- Character Tools ---
 
-export const getCharactersByIdTool = (ctx: ActionCtx) =>
+export const getCharactersByIdTool = (ctx: RunQueryCtx) =>
   tool({
     description: "Get one or more characters' details by their IDs",
     inputSchema: z.object({ ids: z.array(zid("character")) }),
@@ -134,7 +140,10 @@ export const getCharactersByIdTool = (ctx: ActionCtx) =>
     },
   });
 
-export const listCharactersTool = (ctx: ActionCtx, projectId: Id<"project">) =>
+export const listCharactersTool = (
+  ctx: RunQueryCtx,
+  projectId: Id<"project">,
+) =>
   tool({
     description: "List all characters in a project",
     inputSchema: z.object({}),
@@ -143,7 +152,7 @@ export const listCharactersTool = (ctx: ActionCtx, projectId: Id<"project">) =>
   });
 
 export const createCharactersTool = (
-  ctx: ActionCtx,
+  ctx: RunMutationCtx,
   projectId: Id<"project">,
 ) =>
   tool({
@@ -165,7 +174,7 @@ export const createCharactersTool = (
     },
   });
 
-export const updateCharactersTool = (ctx: ActionCtx) =>
+export const updateCharactersTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Update multiple existing characters' fields",
     inputSchema: z.object({
@@ -180,7 +189,7 @@ export const updateCharactersTool = (ctx: ActionCtx) =>
     },
   });
 
-export const addCharacterReferenceImagesTool = (ctx: ActionCtx) =>
+export const addCharacterReferenceImagesTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Add multiple reference images to one or more characters",
     inputSchema: z.object({
@@ -199,7 +208,7 @@ export const addCharacterReferenceImagesTool = (ctx: ActionCtx) =>
 
 // --- Environment Tools ---
 
-export const getEnvironmentsByIdTool = (ctx: ActionCtx) =>
+export const getEnvironmentsByIdTool = (ctx: RunQueryCtx) =>
   tool({
     description: "Get one or more environments' details by their IDs",
     inputSchema: z.object({ ids: z.array(zid("environment")) }),
@@ -214,7 +223,7 @@ export const getEnvironmentsByIdTool = (ctx: ActionCtx) =>
   });
 
 export const listEnvironmentsTool = (
-  ctx: ActionCtx,
+  ctx: RunQueryCtx,
   projectId: Id<"project">,
 ) =>
   tool({
@@ -225,7 +234,7 @@ export const listEnvironmentsTool = (
   });
 
 export const createEnvironmentsTool = (
-  ctx: ActionCtx,
+  ctx: RunMutationCtx,
   projectId: Id<"project">,
 ) =>
   tool({
@@ -249,7 +258,7 @@ export const createEnvironmentsTool = (
     },
   });
 
-export const updateEnvironmentsTool = (ctx: ActionCtx) =>
+export const updateEnvironmentsTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Update multiple existing environments' fields",
     inputSchema: z.object({
@@ -266,7 +275,7 @@ export const updateEnvironmentsTool = (ctx: ActionCtx) =>
     },
   });
 
-export const addEnvironmentReferenceImagesTool = (ctx: ActionCtx) =>
+export const addEnvironmentReferenceImagesTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Add multiple reference images to one or more environments",
     inputSchema: z.object({
@@ -285,7 +294,7 @@ export const addEnvironmentReferenceImagesTool = (ctx: ActionCtx) =>
 
 // --- Scene Tools ---
 
-export const getScenesByIdTool = (ctx: ActionCtx) =>
+export const getScenesByIdTool = (ctx: RunQueryCtx) =>
   tool({
     description: "Get one or more scenes' details by their IDs",
     inputSchema: z.object({ ids: z.array(zid("scene")) }),
@@ -298,7 +307,7 @@ export const getScenesByIdTool = (ctx: ActionCtx) =>
   });
 
 export const listScenesTool = (
-  ctx: ActionCtx,
+  ctx: RunQueryCtx,
   storyboardId: Id<"storyboard">,
 ) =>
   tool({
@@ -308,7 +317,7 @@ export const listScenesTool = (
   });
 
 export const createScenesTool = (
-  ctx: ActionCtx,
+  ctx: RunMutationCtx,
   storyboardId: Id<"storyboard">,
 ) =>
   tool({
@@ -330,7 +339,7 @@ export const createScenesTool = (
     },
   });
 
-export const updateScenesTool = (ctx: ActionCtx) =>
+export const updateScenesTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Update multiple existing scenes' fields",
     inputSchema: z.object({
@@ -347,7 +356,7 @@ export const updateScenesTool = (ctx: ActionCtx) =>
 
 // --- Shot Tools ---
 
-export const getShotsByIdTool = (ctx: ActionCtx) =>
+export const getShotsByIdTool = (ctx: RunQueryCtx) =>
   tool({
     description: "Get one or more shots' details by their IDs",
     inputSchema: z.object({ ids: z.array(zid("shot")) }),
@@ -359,14 +368,14 @@ export const getShotsByIdTool = (ctx: ActionCtx) =>
     },
   });
 
-export const listShotsTool = (ctx: ActionCtx) =>
+export const listShotsTool = (ctx: RunQueryCtx) =>
   tool({
     description: "List all shots in a scene",
     inputSchema: z.object({ sceneId: zid("scene") }),
     execute: (args) => ctx.runQuery(internal.agent.fn.listShots, args),
   });
 
-export const createShotsTool = (ctx: ActionCtx) =>
+export const createShotsTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Create one or more new shots within a scene",
     inputSchema: z.object({
@@ -381,7 +390,7 @@ export const createShotsTool = (ctx: ActionCtx) =>
     },
   });
 
-export const updateShotsTool = (ctx: ActionCtx) =>
+export const updateShotsTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Update multiple existing shots' fields",
     inputSchema: z.object({
@@ -396,7 +405,7 @@ export const updateShotsTool = (ctx: ActionCtx) =>
     },
   });
 
-export const addShotFirstFramesTool = (ctx: ActionCtx) =>
+export const addShotFirstFramesTool = (ctx: RunMutationCtx) =>
   tool({
     description:
       "Add multiple first frame variants (images) to one or more shots",
@@ -412,7 +421,7 @@ export const addShotFirstFramesTool = (ctx: ActionCtx) =>
     },
   });
 
-export const addShotVideoClipsTool = (ctx: ActionCtx) =>
+export const addShotVideoClipsTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Add multiple video clip variants to one or more shots",
     inputSchema: z.object({
@@ -429,7 +438,7 @@ export const addShotVideoClipsTool = (ctx: ActionCtx) =>
 
 // --- Video Tools ---
 
-export const getVideosByIdTool = (ctx: ActionCtx) =>
+export const getVideosByIdTool = (ctx: RunQueryCtx) =>
   tool({
     description: "Get one or more videos' details by their IDs",
     inputSchema: z.object({ ids: z.array(zid("video")) }),
@@ -441,7 +450,7 @@ export const getVideosByIdTool = (ctx: ActionCtx) =>
     },
   });
 
-export const listVideosTool = (ctx: ActionCtx, projectId: Id<"project">) =>
+export const listVideosTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({
     description: "List all videos in a project",
     inputSchema: z.object({
@@ -459,7 +468,10 @@ export const listVideosTool = (ctx: ActionCtx, projectId: Id<"project">) =>
     },
   });
 
-export const generateVideosTool = (ctx: ActionCtx, projectId: Id<"project">) =>
+export const generateVideosTool = (
+  ctx: RunMutationCtx,
+  projectId: Id<"project">,
+) =>
   tool({
     description: "Generate one or more new video clips based on prompts",
     inputSchema: z.object({
@@ -481,7 +493,7 @@ export const generateVideosTool = (ctx: ActionCtx, projectId: Id<"project">) =>
 
 // --- Voice Tools ---
 
-export const getVoicesByIdTool = (ctx: ActionCtx) =>
+export const getVoicesByIdTool = (ctx: RunQueryCtx) =>
   tool({
     description: "Get one or more voices' details by their IDs",
     inputSchema: z.object({ ids: z.array(zid("voice")) }),
@@ -493,7 +505,7 @@ export const getVoicesByIdTool = (ctx: ActionCtx) =>
     },
   });
 
-export const listVoicesTool = (ctx: ActionCtx, projectId: Id<"project">) =>
+export const listVoicesTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({
     description: "List all voices in a project",
     inputSchema: z.object({
