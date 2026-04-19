@@ -24,14 +24,14 @@ export const UpdateShotArgsValidator = v.object({
   selectedVideoClip: v.optional(ShotFields.selectedVideoClip),
 });
 
-export const AddShotFirstFrameArgsValidator = v.object({
+export const AddShotFirstFramesArgsValidator = v.object({
   id: v.id("shot"),
-  imageId: v.id("image"),
+  imageIds: v.array(v.id("image")),
 });
 
-export const AddShotVideoClipArgsValidator = v.object({
+export const AddShotVideoClipsArgsValidator = v.object({
   id: v.id("shot"),
-  videoId: v.id("video"),
+  videoIds: v.array(v.id("video")),
 });
 
 export const getShotByIdHandler = (ctx: QueryCtx, id: Id<"shot">) => {
@@ -71,29 +71,29 @@ export const updateShotHandler = async (
   await ctx.db.patch(id, fields);
 };
 
-export const addShotFirstFrameHandler = async (
+export const addShotFirstFramesHandler = async (
   ctx: MutationCtx,
-  options: Infer<typeof AddShotFirstFrameArgsValidator>,
+  options: Infer<typeof AddShotFirstFramesArgsValidator>,
 ) => {
   const shot = await ctx.db.get(options.id);
   if (!shot) throw new Error("Shot not found");
 
   const firstFrames = shot.firstFrames ?? [];
   await ctx.db.patch(options.id, {
-    firstFrames: [...firstFrames, options.imageId],
+    firstFrames: [...firstFrames, ...options.imageIds],
   });
 };
 
-export const addShotVideoClipHandler = async (
+export const addShotVideoClipsHandler = async (
   ctx: MutationCtx,
-  options: Infer<typeof AddShotVideoClipArgsValidator>,
+  options: Infer<typeof AddShotVideoClipsArgsValidator>,
 ) => {
   const shot = await ctx.db.get(options.id);
   if (!shot) throw new Error("Shot not found");
 
   const videoClips = shot.videoClips ?? [];
   await ctx.db.patch(options.id, {
-    videoClips: [...videoClips, options.videoId],
+    videoClips: [...videoClips, ...options.videoIds],
   });
 };
 
@@ -117,14 +117,14 @@ export const update = authMutation({
   handler: (ctx, args) => updateShotHandler(ctx, args),
 });
 
-export const addFirstFrame = authMutation({
-  args: AddShotFirstFrameArgsValidator,
-  handler: (ctx, args) => addShotFirstFrameHandler(ctx, args),
+export const addFirstFrames = authMutation({
+  args: AddShotFirstFramesArgsValidator,
+  handler: (ctx, args) => addShotFirstFramesHandler(ctx, args),
 });
 
-export const addVideoClip = authMutation({
-  args: AddShotVideoClipArgsValidator,
-  handler: (ctx, args) => addShotVideoClipHandler(ctx, args),
+export const addVideoClips = authMutation({
+  args: AddShotVideoClipsArgsValidator,
+  handler: (ctx, args) => addShotVideoClipsHandler(ctx, args),
 });
 
 export const remove = authMutation({

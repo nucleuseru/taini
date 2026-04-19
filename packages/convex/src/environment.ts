@@ -28,11 +28,10 @@ export const UpdateEnvironmentArgsValidator = v.object({
   description: v.optional(EnvironmentFields.description),
 });
 
-export const AddEnvironmentReferenceImageArgsValidator = v
-  .object({
-    id: v.id("environment"),
-  })
-  .extend(EnvironmentFields.referenceImages.element.fields);
+export const AddEnvironmentReferenceImagesArgsValidator = v.object({
+  id: v.id("environment"),
+  images: v.array(v.object(EnvironmentFields.referenceImages.element.fields)),
+});
 
 export const getEnvironmentByIdHandler = (
   ctx: QueryCtx,
@@ -70,16 +69,16 @@ export const updateEnvironmentHandler = async (
   await ctx.db.patch(id, fields);
 };
 
-export const addEnvironmentReferenceImageHandler = async (
+export const addEnvironmentReferenceImagesHandler = async (
   ctx: MutationCtx,
-  options: Infer<typeof AddEnvironmentReferenceImageArgsValidator>,
+  options: Infer<typeof AddEnvironmentReferenceImagesArgsValidator>,
 ) => {
-  const { id, ...imageRef } = options;
+  const { id, images } = options;
   const environment = await ctx.db.get(id);
   if (!environment) throw new Error("Environment not found");
 
   await ctx.db.patch(id, {
-    referenceImages: [...environment.referenceImages, imageRef],
+    referenceImages: [...environment.referenceImages, ...images],
   });
 };
 
@@ -103,9 +102,9 @@ export const update = authMutation({
   handler: (ctx, args) => updateEnvironmentHandler(ctx, args),
 });
 
-export const addReferenceImage = authMutation({
-  args: AddEnvironmentReferenceImageArgsValidator,
-  handler: (ctx, args) => addEnvironmentReferenceImageHandler(ctx, args),
+export const addReferenceImages = authMutation({
+  args: AddEnvironmentReferenceImagesArgsValidator,
+  handler: (ctx, args) => addEnvironmentReferenceImagesHandler(ctx, args),
 });
 
 export const remove = authMutation({

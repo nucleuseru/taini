@@ -28,11 +28,10 @@ export const UpdateCharacterArgsValidator = v.object({
   personality: v.optional(CharacterFields.personality),
 });
 
-export const AddCharacterReferenceImageArgsValidator = v
-  .object({
-    id: v.id("character"),
-  })
-  .extend(CharacterFields.referenceImages.element.fields);
+export const AddCharacterReferenceImagesArgsValidator = v.object({
+  id: v.id("character"),
+  images: v.array(v.object(CharacterFields.referenceImages.element.fields)),
+});
 
 export const getCharacterByIdHandler = (ctx: QueryCtx, id: Id<"character">) => {
   return ctx.db.get(id);
@@ -68,16 +67,16 @@ export const updateCharacterHandler = async (
   await ctx.db.patch(id, fields);
 };
 
-export const addCharacterReferenceImageHandler = async (
+export const addCharacterReferenceImagesHandler = async (
   ctx: MutationCtx,
-  options: Infer<typeof AddCharacterReferenceImageArgsValidator>,
+  options: Infer<typeof AddCharacterReferenceImagesArgsValidator>,
 ) => {
-  const { id, ...imageRef } = options;
+  const { id, images } = options;
   const character = await ctx.db.get(id);
   if (!character) throw new Error("Character not found");
 
   await ctx.db.patch(id, {
-    referenceImages: [...character.referenceImages, imageRef],
+    referenceImages: [...character.referenceImages, ...images],
   });
 };
 
@@ -101,9 +100,9 @@ export const update = authMutation({
   handler: (ctx, args) => updateCharacterHandler(ctx, args),
 });
 
-export const addReferenceImage = authMutation({
-  args: AddCharacterReferenceImageArgsValidator,
-  handler: (ctx, args) => addCharacterReferenceImageHandler(ctx, args),
+export const addReferenceImages = authMutation({
+  args: AddCharacterReferenceImagesArgsValidator,
+  handler: (ctx, args) => addCharacterReferenceImagesHandler(ctx, args),
 });
 
 export const remove = authMutation({

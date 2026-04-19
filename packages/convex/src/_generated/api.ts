@@ -8,7 +8,10 @@
  * @module
  */
 
-import type * as agent_internal from "../agent/internal.js";
+import type * as agent_fn from "../agent/fn.js";
+import type * as agent_index from "../agent/index.js";
+import type * as agent_prompt from "../agent/prompt.js";
+import type * as agent_tools from "../agent/tools.js";
 import type * as audio from "../audio.js";
 import type * as auth from "../auth.js";
 import type * as character from "../character.js";
@@ -34,7 +37,10 @@ import type {
 import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
-  "agent/internal": typeof agent_internal;
+  "agent/fn": typeof agent_fn;
+  "agent/index": typeof agent_index;
+  "agent/prompt": typeof agent_prompt;
+  "agent/tools": typeof agent_tools;
   audio: typeof audio;
   auth: typeof auth;
   character: typeof character;

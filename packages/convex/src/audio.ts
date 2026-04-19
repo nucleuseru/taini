@@ -39,7 +39,7 @@ export const listAudiosHandler = async (
   const audios = await ctx.db
     .query("audio")
     .withIndex("by_project_id", (q) => q.eq("projectId", options.projectId))
-    .order(options.sort ?? "asc")
+    .order(options.sort ?? "desc")
     .paginate(options.paginationOpts);
 
   const page = await Promise.all(

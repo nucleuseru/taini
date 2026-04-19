@@ -40,7 +40,7 @@ export const listImagesHandler = async (
   const images = await ctx.db
     .query("image")
     .withIndex("by_project_id", (q) => q.eq("projectId", options.projectId))
-    .order(options.sort ?? "asc")
+    .order(options.sort ?? "desc")
     .paginate(options.paginationOpts);
 
   const page = await Promise.all(

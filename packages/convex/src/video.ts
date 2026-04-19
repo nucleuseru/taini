@@ -45,7 +45,7 @@ export const listVideosHandler = async (
   const videos = await ctx.db
     .query("video")
     .withIndex("by_project_id", (q) => q.eq("projectId", options.projectId))
-    .order(options.sort ?? "asc")
+    .order(options.sort ?? "desc")
     .paginate(options.paginationOpts);
 
   const page = await Promise.all(

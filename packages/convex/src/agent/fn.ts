@@ -63,10 +63,10 @@ export const updateCharacter = internalMutation({
   handler: (ctx, args) => Character.updateCharacterHandler(ctx, args),
 });
 
-export const addCharacterReferenceImage = internalMutation({
-  args: Character.AddCharacterReferenceImageArgsValidator,
+export const addCharacterReferenceImages = internalMutation({
+  args: Character.AddCharacterReferenceImagesArgsValidator,
   handler: (ctx, args) =>
-    Character.addCharacterReferenceImageHandler(ctx, args),
+    Character.addCharacterReferenceImagesHandler(ctx, args),
 });
 
 // Environment
@@ -90,10 +90,10 @@ export const updateEnvironment = internalMutation({
   handler: (ctx, args) => Environment.updateEnvironmentHandler(ctx, args),
 });
 
-export const addEnvironmentReferenceImage = internalMutation({
-  args: Environment.AddEnvironmentReferenceImageArgsValidator,
+export const addEnvironmentReferenceImages = internalMutation({
+  args: Environment.AddEnvironmentReferenceImagesArgsValidator,
   handler: (ctx, args) =>
-    Environment.addEnvironmentReferenceImageHandler(ctx, args),
+    Environment.addEnvironmentReferenceImagesHandler(ctx, args),
 });
 
 // Scene
@@ -138,14 +138,14 @@ export const updateShot = internalMutation({
   handler: (ctx, args) => Shot.updateShotHandler(ctx, args),
 });
 
-export const addShotFirstFrame = internalMutation({
-  args: Shot.AddShotFirstFrameArgsValidator,
-  handler: (ctx, args) => Shot.addShotFirstFrameHandler(ctx, args),
+export const addShotFirstFrames = internalMutation({
+  args: Shot.AddShotFirstFramesArgsValidator,
+  handler: (ctx, args) => Shot.addShotFirstFramesHandler(ctx, args),
 });
 
-export const addShotVideoClip = internalMutation({
-  args: Shot.AddShotVideoClipArgsValidator,
-  handler: (ctx, args) => Shot.addShotVideoClipHandler(ctx, args),
+export const addShotVideoClips = internalMutation({
+  args: Shot.AddShotVideoClipsArgsValidator,
+  handler: (ctx, args) => Shot.addShotVideoClipsHandler(ctx, args),
 });
 
 // Video
