@@ -1,9 +1,14 @@
 import { google } from "@ai-sdk/google";
 import { Agent, stepCountIs } from "@convex-dev/agent";
-import { components } from "../_generated/api";
+import { ConvexError, v } from "convex/values";
+import { api, components } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
+import { authAction } from "../function";
 import { RunMutationCtx, RunQueryCtx } from "../utils";
-import { SYSTEM_PROMPT } from "./prompt";
+import {
+  CREATE_CHARACTERS_AND_ENVIRONMENTS_PROMPT,
+  SYSTEM_PROMPT,
+} from "./prompts";
 import * as tools from "./tools";
 
 export const createAgent = (
@@ -84,3 +89,56 @@ export const createAgent = (
     },
   });
 };
+
+export const createCharactersAndEnvironments = authAction({
+  args: { projectId: v.id("project") },
+  handler: async (ctx, args) => {
+    const project = await ctx.runQuery(api.project.get, { id: args.projectId });
+    const storyboard = await ctx.runQuery(api.storyboard.getByProject, args);
+
+    if (!project) {
+      throw new ConvexError("Project does not exist");
+    }
+
+    if (!storyboard) {
+      throw new ConvexError("No storyboard exist in the project");
+    }
+
+    const agent = createAgent(ctx, {
+      script: storyboard.script,
+      projectId: args.projectId,
+      projectName: project.name,
+      storyboardId: storyboard._id,
+    });
+
+    const { thread } = storyboard.threadId
+      ? await agent.continueThread(ctx, {
+          userId: ctx.user._id,
+          threadId: storyboard.threadId,
+        })
+      : await agent.createThread(ctx, {
+          userId: ctx.user._id,
+        });
+
+    if (!storyboard.threadId) {
+      await ctx.runMutation(api.storyboard.update, {
+        id: storyboard._id,
+        threadId: thread.threadId,
+      });
+    }
+
+    await thread.generateText({
+      prompt: CREATE_CHARACTERS_AND_ENVIRONMENTS_PROMPT,
+      activeTools: [
+        "listImages",
+        "listCharacters",
+        "listEnvironments",
+        "generateImages",
+        "createCharacters",
+        "createEnvironments",
+        "addCharacterReferenceImages",
+        "addEnvironmentReferenceImages",
+      ],
+    });
+  },
+});
