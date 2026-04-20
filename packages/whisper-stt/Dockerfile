@@ -11,6 +11,10 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+RUN python3 -m venv /app/venv
+
+ENV PATH="/app/venv/bin:$PATH"
+
 RUN pip3 install --no-cache-dir openai-whisper runpod asyncio
 
 ARG WHISPER_MODEL=turbo

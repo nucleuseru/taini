@@ -14,10 +14,15 @@ RUN apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+WORKDIR /app
+
+RUN python3 -m venv /app/venv
+
+ENV PATH="/app/venv/bin:$PATH"
+
 # Install Python dependencies
 RUN pip3 install --no-cache-dir -U qwen-tts runpod soundfile
 
-WORKDIR /app
 
 COPY handler.py .
 
