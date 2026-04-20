@@ -25,7 +25,6 @@ async def handler(job):
 
     job_input = job.get("input", {})
     audio_url = job_input.get("audio_url")
-    language = job_input.get("language")
 
     if not audio_url:
         active_jobs -= 1
@@ -34,7 +33,6 @@ async def handler(job):
     try:
         # Extract additional whisper parameters if provided
         params = {
-            "language": language,
             "word_timestamps": job_input.get("word_timestamps", True),
             "fp16": torch.cuda.is_available(),
         }
