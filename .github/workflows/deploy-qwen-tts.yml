@@ -36,5 +36,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/qwen3-tts-worker:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/qwen3-tts-worker:${{ github.sha }}
+          build-args: |
+            HF_TOKEN=${{ secrets.HF_TOKEN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
