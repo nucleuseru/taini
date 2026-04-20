@@ -1,0 +1,38 @@
+name: Build and Push Whisper Worker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/whisper-stt/**"
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ./packages/whisper-stt
+          file: ./packages/whisper-stt/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/whisper-stt-worker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
