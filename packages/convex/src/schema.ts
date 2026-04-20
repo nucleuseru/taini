@@ -30,9 +30,7 @@ export const ImageFields = {
   /** References to other images used as input for multi-reference generation. */
   referenceImages: optional(v.array(v.id("image"))),
   /** The vertical resolution of the image. */
-  resolution: optional(
-    v.union(v.literal(1080), v.literal(720), v.literal(480)),
-  ),
+  resolution: optional(v.union(v.literal("1080p"), v.literal("1920p"))),
 };
 
 /**
@@ -62,18 +60,9 @@ export const VideoFields = {
   referenceAudio: optional(v.id("audio")),
   referenceAudioStart: optional(v.number()),
   /** The vertical resolution of the video. */
-  resolution: optional(
-    v.union(v.literal(1080), v.literal(720), v.literal(480)),
-  ),
-  frameRate: optional(v.union(v.literal(24), v.literal(30), v.literal(60))),
-  /** The generation pipeline type. */
-  type: optional(
-    v.union(
-      v.literal("text-to-video"),
-      v.literal("image-to-video"),
-      v.literal("audio-to-video"),
-      v.literal("video-to-video"),
-    ),
+  resolution: optional(v.union(v.literal("1080p"), v.literal("1920p"))),
+  frameRate: optional(
+    v.union(v.literal("24"), v.literal("30"), v.literal("60")),
   ),
 };
 
@@ -149,8 +138,6 @@ export const CharacterFields = {
   personality: optional(v.string()),
   /** Visual appearance details. */
   appearance: optional(v.string()),
-  /** Reference to the voice assigned to this character. */
-  voice: optional(v.id("voice")),
   /** Age or age range of the character. */
   age: optional(v.string()),
   /** Images used to define the character's visual identity. */
@@ -161,7 +148,7 @@ export const CharacterFields = {
       /** Detailed description of what this image shows. */
       description: optional(v.string()),
       /** Reference to the image asset. */
-      image: v.id("image"),
+      imageId: v.id("image"),
     }),
   ),
 };
@@ -193,7 +180,7 @@ export const EnvironmentFields = {
       /** Detailed description of what this image shows. */
       description: v.string(),
       /** Reference to the image asset. */
-      image: v.id("image"),
+      imageId: v.id("image"),
     }),
   ),
 };

@@ -5,6 +5,10 @@ export const optional = <Type, FieldPaths extends string = never>(
   validator: Validator<Type, "required", FieldPaths>,
 ) => v.optional(v.nullable(validator));
 
+export const sleep = (delay: number) => {
+  return new Promise((resolve) => setTimeout(resolve, delay));
+};
+
 export const generationStatusValidator = v.union(
   v.literal("pending"),
   v.literal("generating"),

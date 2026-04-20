@@ -18,7 +18,6 @@ export const GenerateVideoArgsValidator = v.object({
   duration: VideoFields.duration,
   projectId: VideoFields.projectId,
   frameRate: VideoFields.frameRate,
-  type: VideoFields.type.members[0],
   resolution: VideoFields.resolution,
   referenceImage: VideoFields.referenceImage,
   referenceVideo: VideoFields.referenceVideo,

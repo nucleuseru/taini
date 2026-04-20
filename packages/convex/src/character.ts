@@ -11,7 +11,6 @@ export const ListCharacterArgsValidator = v.object({
 export const CreateCharacterArgsValidator = v.object({
   age: CharacterFields.age,
   name: CharacterFields.name,
-  voice: CharacterFields.voice,
   projectId: CharacterFields.projectId,
   appearance: CharacterFields.appearance,
   description: CharacterFields.description,
@@ -21,7 +20,6 @@ export const CreateCharacterArgsValidator = v.object({
 export const UpdateCharacterArgsValidator = v.object({
   id: v.id("character"),
   age: v.optional(CharacterFields.age),
-  voice: v.optional(CharacterFields.voice),
   name: v.optional(CharacterFields.name),
   appearance: v.optional(CharacterFields.appearance),
   description: v.optional(CharacterFields.description),
