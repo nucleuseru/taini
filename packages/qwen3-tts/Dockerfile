@@ -7,10 +7,7 @@ ENV PYTHONUNBUFFERED=1
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    sox \
-    libsox-fmt-all \
-    ffmpeg \
-    libsndfile1 \
+    sox ffmpeg libsndfile1 libsox-fmt-all python3.12-venv \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
