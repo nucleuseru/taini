@@ -14,11 +14,11 @@ RUN apt-get update && \
 WORKDIR /app
 
 RUN python3 -m venv /app/venv
-
 ENV PATH="/app/venv/bin:$PATH"
 
 # Install Python dependencies
-RUN pip3 install --no-cache-dir -U qwen-tts runpod soundfile
+RUN pip3 install --no-cache-dir -U qwen-tts runpod soundfile "huggingface_hub[cli]" && \
+    huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-Base
 
 
 COPY handler.py .
