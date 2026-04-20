@@ -14,7 +14,7 @@ dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 print(f"Loading Qwen3-TTS model on {device}...")
 
 model = Qwen3TTSModel.from_pretrained(
-    "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+    "/app/Qwen3-TTS-12Hz-1.7B-Base",
     device_map=device,
     dtype=dtype,
 )
