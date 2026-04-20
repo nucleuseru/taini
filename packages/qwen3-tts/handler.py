@@ -4,7 +4,6 @@ import runpod
 import soundfile as sf
 import io
 import base64
-import asyncio
 from qwen_tts import Qwen3TTSModel
 
 HF_CACHE_ROOT = "/runpod-volume/huggingface-cache/hub"
@@ -56,18 +55,17 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 
 print(f"Loading Qwen3-TTS model on {device}...")
-attn_implementation = "flash_attention_2" if torch.cuda.is_available() else "eager"
 
 model = Qwen3TTSModel.from_pretrained(
     resolve_snapshot_path("Qwen/Qwen3-TTS-12Hz-1.7B-Base"),
     device_map=device,
     dtype=dtype,
-    attn_implementation=attn_implementation,
 )
+
 print("Model loaded successfully.")
 
 
-async def handler(job):
+def handler(job):
     """
     Processes incoming TTS and Voice Cloning requests.
     Supports batch generation and reusable voice clone prompts.
@@ -87,8 +85,7 @@ async def handler(job):
                 }
 
             print(f"Creating reusable voice clone prompt for audio: {ref_audio}")
-            prompt_items = await asyncio.to_thread(
-                model.create_voice_clone_prompt,
+            prompt_items = model.create_voice_clone_prompt(
                 ref_audio=ref_audio,
                 ref_text=ref_text,
                 x_vector_only_mode=x_vector_only_mode,
@@ -97,7 +94,7 @@ async def handler(job):
             # Serialize prompt_items to base64
             buffer = io.BytesIO()
             torch.save(prompt_items, buffer)
-            prompt_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+            prompt_base64 = base64.encodebytes(buffer.getvalue()).decode("utf-8")
 
             return {"voice_clone_prompt": prompt_base64}
 
@@ -127,8 +124,7 @@ async def handler(job):
             elif ref_audio and ref_text:
                 # Create prompt on the fly
                 print(f"Creating prompt on the fly for audio: {ref_audio}")
-                prompt_items = await asyncio.to_thread(
-                    model.create_voice_clone_prompt,
+                prompt_items = model.create_voice_clone_prompt(
                     ref_audio=ref_audio,
                     ref_text=ref_text,
                 )
@@ -139,8 +135,7 @@ async def handler(job):
 
             # Generate audios
             print(f"Generating {len(texts)} voice clone(s)...")
-            wavs, sr = await asyncio.to_thread(
-                model.generate_voice_clone,
+            wavs, sr = model.generate_voice_clone(
                 text=texts,
                 language=languages,
                 voice_clone_prompt=prompt_items,
