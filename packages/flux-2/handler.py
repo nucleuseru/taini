@@ -3,8 +3,9 @@ import io
 import torch
 import runpod
 import asyncio
-import base64
+import requests
 from schema import schema
+from convex import ConvexClient
 from diffusers import Flux2Pipeline
 from diffusers.utils import load_image
 from runpod.serverless.utils.rp_validator import validate
@@ -21,6 +22,8 @@ TORCH_DTYPE = torch.bfloat16
 TURBO_SIGMAS = [1.0, 0.6509, 0.4374, 0.2932, 0.1893, 0.1108, 0.0495, 0.00031]
 
 
+client = ConvexClient(os.getenv("CONVEX_URL"))
+
 pipe = Flux2Pipeline.from_pretrained(
     resolve_snapshot_path(REPO_ID), text_encoder=None, torch_dtype=TORCH_DTYPE
 ).to(DEVICE)
@@ -30,13 +33,29 @@ pipe.load_lora_weights(
 )
 
 
+async def upload_image(image, client):
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    post_url = client.mutation("upload:generateUrl", {})
+    response = await asyncio.to_thread(
+        requests.post,
+        post_url,
+        data=buffer.getvalue(),
+        headers={"Content-Type": "image/png"},
+        timeout=60,
+    )
+    response.raise_for_status()
+    return response.json().get("storageId")
+
+
 async def handler(event):
     global ACTIVE_JOBS
     ACTIVE_JOBS += 1
 
     try:
         validated_input = validate(event["input"], schema)
-
         if "errors" in validated_input:
             return {"error": validated_input["errors"]}
 
@@ -72,12 +91,9 @@ async def handler(event):
         )
 
         image = output.images[0]
+        storage_id = await asyncio.to_thread(upload_image, image=image, client=client)
 
-        buffered = io.BytesIO()
-        image.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-
-        return img_str
+        return {"image": storage_id}
 
     except Exception as e:
         return {"error": str(e)}

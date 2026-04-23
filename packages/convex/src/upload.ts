@@ -1,6 +1,6 @@
-import { authMutation } from "./function";
+import { mutation } from "./function";
 
-export const generateUrl = authMutation({
+export const generateUrl = mutation({
   args: {},
   handler: (ctx) => ctx.storage.generateUploadUrl(),
 });
