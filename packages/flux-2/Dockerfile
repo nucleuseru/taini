@@ -19,7 +19,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 RUN pip install --no-cache-dir torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu129 && \
     pip install --no-cache-dir git+https://github.com/huggingface/diffusers.git && \
-    pip install --no-cache-dir -U transformers accelerate bitsandbytes requests runpod asyncio
+    pip install --no-cache-dir -U transformers accelerate bitsandbytes requests runpod asyncio peft
 
 COPY handler.py schema.py utils.py ./
 
