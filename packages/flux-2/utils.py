@@ -1,31 +1,10 @@
 import os
-import io
-import torch
-import requests
-from huggingface_hub import get_token
 
 
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
-DEVICE = "cuda:0"
 HF_CACHE_ROOT = "/runpod-volume/huggingface-cache/hub"
-
-
-def remote_text_encoder(prompts):
-    response = requests.post(
-        "https://remote-text-encoder-flux-2.huggingface.co/predict",
-        json={"prompt": prompts},
-        headers={
-            "Authorization": f"Bearer {get_token()}",
-            "Content-Type": "application/json",
-        },
-    )
-
-    assert response.status_code == 200, f"{response.status_code=}"
-    prompt_embeds = torch.load(io.BytesIO(response.content))
-
-    return prompt_embeds.to(DEVICE)
 
 
 def resolve_snapshot_path(model_id: str) -> str:

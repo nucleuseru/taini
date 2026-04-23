@@ -8,7 +8,7 @@ from schema import schema
 from convex import ConvexClient
 from diffusers import Flux2Pipeline
 from diffusers.utils import load_image
-from utils import resolve_snapshot_path, remote_text_encoder
+from utils import resolve_snapshot_path
 
 
 ACTIVE_JOBS = 0
@@ -24,8 +24,11 @@ TURBO_SIGMAS = [1.0, 0.6509, 0.4374, 0.2932, 0.1893, 0.1108, 0.0495, 0.00031]
 client = ConvexClient(os.getenv("CONVEX_URL"))
 
 pipe = Flux2Pipeline.from_pretrained(
-    resolve_snapshot_path(REPO_ID), text_encoder=None, torch_dtype=TORCH_DTYPE
-).to(DEVICE)
+    resolve_snapshot_path(REPO_ID), torch_dtype=TORCH_DTYPE
+)
+
+pipe.enable_model_cpu_offload()
+pipe.to(DEVICE)
 
 pipe.load_lora_weights(
     resolve_snapshot_path(REPO_ID), weight_name="flux.2-turbo-lora.safetensors"
@@ -58,7 +61,7 @@ async def handler(event):
 
         generator = (
             torch.Generator(device=DEVICE).manual_seed(data["seed"])
-            if data["seed"]
+            if "seed" in data
             else None
         )
 
@@ -67,15 +70,13 @@ async def handler(event):
                 load_image(img)
                 for img in data["input_images"].replace(" ", "").split(",")
             ]
-            if data["input_images"]
+            if "input_images" in data
             else None
         )
 
-        prompt_embeds = await asyncio.to_thread(remote_text_encoder, data["prompt"])
-
         output = await asyncio.to_thread(
             pipe,
-            prompt_embeds=prompt_embeds,
+            prompt=data["prompt"],
             image=images,
             generator=generator,
             sigmas=TURBO_SIGMAS,
@@ -88,7 +89,7 @@ async def handler(event):
         image = output.images[0]
         storage_id = await asyncio.to_thread(upload_image, image=image, client=client)
 
-        return {"image": storage_id}
+        return {"storage_id": storage_id}
 
     except Exception as e:
         return {"error": str(e)}
