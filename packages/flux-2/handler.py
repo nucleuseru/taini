@@ -8,7 +8,6 @@ from schema import schema
 from convex import ConvexClient
 from diffusers import Flux2Pipeline
 from diffusers.utils import load_image
-from runpod.serverless.utils.rp_validator import validate
 from utils import resolve_snapshot_path, remote_text_encoder
 
 
@@ -51,15 +50,11 @@ async def upload_image(image, client):
 
 
 async def handler(event):
-    global ACTIVE_JOBS
-    ACTIVE_JOBS += 1
-
     try:
-        validated_input = validate(event["input"], schema)
-        if "errors" in validated_input:
-            return {"error": validated_input["errors"]}
+        global ACTIVE_JOBS
+        ACTIVE_JOBS += 1
 
-        data = validated_input["validated_input"]
+        data = event["input"]
 
         generator = (
             torch.Generator(device=DEVICE).manual_seed(data["seed"])
