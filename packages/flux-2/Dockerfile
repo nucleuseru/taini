@@ -11,8 +11,9 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends git python3.12-venv \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && python3 -m venv /app/.venv
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
 
