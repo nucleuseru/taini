@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime
+FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -12,13 +12,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends git python3.12-
 
 WORKDIR /app
 
-RUN python3 -m venv /app/venv
+RUN python3 -m venv /app/.venv
 
-ENV PATH="/app/venv/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH"
 
-RUN pip3 install --no-cache-dir git+https://github.com/huggingface/diffusers.git && \
-    pip3 install --no-cache-dir -U transformers accelerate bitsandbytes && \
-    pip3 install --no-cache-dir requests runpod asyncio
+RUN pip install --no-cache-dir torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu129 && \
+    pip install --no-cache-dir git+https://github.com/huggingface/diffusers.git && \
+    pip install --no-cache-dir -U transformers accelerate bitsandbytes requests runpod asyncio
 
 COPY handler.py schema.py utils.py ./
 
