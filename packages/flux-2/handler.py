@@ -2,18 +2,14 @@ import os
 import io
 import torch
 import runpod
-import asyncio
 import requests
 from schema import schema
 from convex import ConvexClient
 from diffusers import Flux2Pipeline
 from diffusers.utils import load_image
 from utils import resolve_snapshot_path
+from runpod.serverless.utils.rp_validator import validate
 
-
-ACTIVE_JOBS = 0
-MIN_CONCURRENCY = 1
-MAX_CONCURRENCY = int(os.getenv("MAX_CONCURRENCY", "4"))
 
 DEVICE = "cuda:0"
 REPO_ID = "nucleuseru/flux-2"
@@ -35,29 +31,33 @@ pipe.load_lora_weights(
 )
 
 
-async def upload_image(image, client):
+def upload_image(image):
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     buffer.seek(0)
 
     post_url = client.mutation("upload:generateUrl", {})
-    response = await asyncio.to_thread(
-        requests.post,
+
+    response = requests.post(
         post_url,
         data=buffer.getvalue(),
         headers={"Content-Type": "image/png"},
         timeout=60,
     )
+
     response.raise_for_status()
+
     return response.json().get("storageId")
 
 
-async def handler(event):
+def handler(event):
     try:
-        global ACTIVE_JOBS
-        ACTIVE_JOBS += 1
+        validated_input = validate(event["input"], schema)
 
-        data = event["input"]
+        if "errors" in validated_input:
+            return {"error": validated_input["errors"]}
+
+        data = validated_input["validated_input"]
 
         generator = (
             torch.Generator(device=DEVICE).manual_seed(data["seed"])
@@ -74,8 +74,7 @@ async def handler(event):
             else None
         )
 
-        output = await asyncio.to_thread(
-            pipe,
+        output = pipe(
             prompt=data["prompt"],
             image=images,
             generator=generator,
@@ -86,28 +85,12 @@ async def handler(event):
             num_inference_steps=data["num_steps"],
         )
 
-        image = output.images[0]
-        storage_id = await asyncio.to_thread(upload_image, image=image, client=client)
+        storage_id = upload_image(output.images[0])
 
-        return {"storage_id": storage_id}
+        return {"output": {"storage_id": storage_id}}
 
     except Exception as e:
         return {"error": str(e)}
-    finally:
-        ACTIVE_JOBS -= 1
 
 
-def adjust_concurrency(current_concurrency):
-    if ACTIVE_JOBS >= current_concurrency and current_concurrency < MAX_CONCURRENCY:
-        return current_concurrency + 1
-
-    if ACTIVE_JOBS < current_concurrency / 2 and current_concurrency > MIN_CONCURRENCY:
-        return current_concurrency - 1
-
-    return current_concurrency
-
-
-if __name__ == "__main__":
-    runpod.serverless.start(
-        {"handler": handler, "concurrency_modifier": adjust_concurrency}
-    )
+runpod.serverless.start({"handler": handler})

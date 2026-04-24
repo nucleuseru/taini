@@ -1,9 +1,6 @@
 import os
 
 
-os.environ["HF_HUB_OFFLINE"] = "1"
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
-
 HF_CACHE_ROOT = "/runpod-volume/huggingface-cache/hub"
 
 
@@ -16,7 +13,6 @@ def resolve_snapshot_path(model_id: str) -> str:
     refs_main = os.path.join(model_root, "refs", "main")
     snapshots_dir = os.path.join(model_root, "snapshots")
 
-    # Read the snapshot hash from refs/main
     if os.path.isfile(refs_main):
         with open(refs_main, "r") as f:
             snapshot_hash = f.read().strip()
@@ -24,7 +20,6 @@ def resolve_snapshot_path(model_id: str) -> str:
         if os.path.isdir(candidate):
             return candidate
 
-    # Fall back to first available snapshot
     if os.path.isdir(snapshots_dir):
         versions = [
             d
