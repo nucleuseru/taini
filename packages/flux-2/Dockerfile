@@ -34,4 +34,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 \
 COPY --from=builder /app/.venv /app/.venv
 COPY handler.py schema.py utils.py ./
 
-CMD ["python3", "-u", "handler.py"]
+CMD ["python", "-u", "handler.py"]
