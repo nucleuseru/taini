@@ -1,10 +1,10 @@
 schema = {
-    "seed": {"type": int},
-    "input_images": {"type": str},
     "prompt": {"type": str, "required": True},
-    "width": {"type": int, "default": 1024},
-    "height": {"type": int, "default": 1024},
-    "num_steps": {"type": int, "default": 8},
-    "guidance": {"type": float, "default": 4.5},
-    "match_image_size": {"type": int, "default": 0},
+    "seed": {"type": int, "required": False},
+    "input_images": {"type": str, "required": False},
+    "width": {"type": int, "default": 1024, "required": False},
+    "height": {"type": int, "default": 1024, "required": False},
+    "num_steps": {"type": int, "default": 8, "required": False},
+    "guidance": {"type": float, "default": 4.5, "required": False},
+    "match_image_size": {"type": int, "default": 0, "required": False},
 }
