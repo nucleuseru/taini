@@ -58,7 +58,7 @@ def handler(event):
 
         generator = (
             torch.Generator(device=DEVICE).manual_seed(data["seed"])
-            if "seed" in data
+            if data["seed"] != 0
             else None
         )
 
@@ -67,9 +67,11 @@ def handler(event):
                 load_image(img)
                 for img in data["input_images"].replace(" ", "").split(",")
             ]
-            if "input_images" in data
+            if data["input_images"] != "None"
             else None
         )
+
+        print(data)
 
         output = pipe(
             prompt=data["prompt"],
