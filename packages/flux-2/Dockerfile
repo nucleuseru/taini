@@ -13,9 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends git python3 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN uv venv /app/.venv
-RUN uv pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu129
 RUN uv pip install git+https://github.com/huggingface/diffusers.git
 RUN uv pip install -U transformers accelerate bitsandbytes requests runpod peft convex
+RUN uv pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu129
 
 
 FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04
