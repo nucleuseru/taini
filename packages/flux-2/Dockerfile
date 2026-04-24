@@ -3,6 +3,8 @@ FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04 AS builder
 COPY --from=ghcr.io/astral-sh/uv:0.11.6 /uv /uvx /bin/
 
 ENV DEBIAN_FRONTEND=noninteractive \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
     PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
