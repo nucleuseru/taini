@@ -23,12 +23,11 @@ pipe = Flux2Pipeline.from_pretrained(
     resolve_snapshot_path(REPO_ID), torch_dtype=TORCH_DTYPE
 )
 
-pipe.enable_model_cpu_offload()
-pipe.to(DEVICE)
-
 pipe.load_lora_weights(
     resolve_snapshot_path(REPO_ID), weight_name="flux.2-turbo-lora.safetensors"
 )
+
+pipe.enable_model_cpu_offload()
 
 
 def upload_image(image):
@@ -36,12 +35,10 @@ def upload_image(image):
     image.save(buffer, format="PNG")
     buffer.seek(0)
 
-    post_url = client.mutation("upload:generateUrl", {})
-
     response = requests.post(
-        post_url,
-        data=buffer.getvalue(),
+        client.mutation("upload:generateUrl"),
         headers={"Content-Type": "image/png"},
+        data=buffer.getvalue(),
         timeout=60,
     )
 
