@@ -18,7 +18,9 @@ RUN uv venv /app/.venv
 RUN uv pip install --no-cache-dir \
     requests runpod convex \
     "git+https://github.com/Lightricks/LTX-2.git#subdirectory=packages/ltx-core" \
-    "git+https://github.com/Lightricks/LTX-2.git#subdirectory=packages/ltx-pipelines"
+    "git+https://github.com/Lightricks/LTX-2.git#subdirectory=packages/ltx-pipelines" \
+    torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 \
+    --extra-index-url https://download.pytorch.org/whl/cu129
 
 
 FROM nvidia/cuda:12.9.1-base-ubuntu24.04
