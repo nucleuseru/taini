@@ -13,21 +13,14 @@ from runpod.serverless.utils.rp_validator import validate
 
 
 DEVICE = "cuda:0"
-REPO_ID = "nucleuseru/flux-2"
 TORCH_DTYPE = torch.bfloat16
+REPO_PATH = resolve_snapshot_path("nucleuseru/flux-2")
 TURBO_SIGMAS = [1.0, 0.6509, 0.4374, 0.2932, 0.1893, 0.1108, 0.0495, 0.00031]
 
 
 client = ConvexClient(os.getenv("CONVEX_URL"))
-
-pipe = Flux2Pipeline.from_pretrained(
-    resolve_snapshot_path(REPO_ID), torch_dtype=TORCH_DTYPE
-)
-
-pipe.load_lora_weights(
-    resolve_snapshot_path(REPO_ID), weight_name="flux.2-turbo-lora.safetensors"
-)
-
+pipe = Flux2Pipeline.from_pretrained(REPO_PATH, torch_dtype=TORCH_DTYPE)
+pipe.load_lora_weights(REPO_PATH, weight_name="flux.2-turbo-lora.safetensors")
 pipe.enable_model_cpu_offload()
 
 
