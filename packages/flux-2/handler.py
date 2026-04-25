@@ -2,6 +2,7 @@ import os
 import io
 import torch
 import runpod
+import random
 import requests
 from schema import schema
 from convex import ConvexClient
@@ -56,22 +57,17 @@ def handler(event):
 
         data = validated_input["validated_input"]
 
-        generator = (
-            torch.Generator(device=DEVICE).manual_seed(data["seed"])
-            if data["seed"] != 0
-            else None
+        generator = torch.Generator(device=DEVICE).manual_seed(
+            data["seed"] if data["seed"] != 0 else random.randint(0, 2**32 - 1)
         )
 
-        images = (
-            [
+        images = None
+
+        if data["input_images"] != "None":
+            images = [
                 load_image(img)
                 for img in data["input_images"].replace(" ", "").split(",")
             ]
-            if data["input_images"] != "None"
-            else None
-        )
-
-        print(data)
 
         output = pipe(
             prompt=data["prompt"],
@@ -82,11 +78,15 @@ def handler(event):
             height=data["height"],
             guidance_scale=data["guidance"],
             num_inference_steps=data["num_steps"],
+            num_images_per_prompt=data["num_images_per_prompt"],
         )
 
-        storage_id = upload_image(output.images[0])
+        storage_ids = []
 
-        return {"output": {"storage_id": storage_id}}
+        for img in output.images:
+            storage_ids.append(upload_image(img))
+
+        return {"output": {"storage_ids": storage_ids}}
 
     except Exception as e:
         return {"error": str(e)}
