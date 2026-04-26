@@ -25,6 +25,7 @@ DISTILLED_LORA = LoraPathStrengthAndSDOps(
 )
 
 client = ConvexClient(os.getenv("CONVEX_URL"))
+print(f"--- Loading LTX-2.3 Pipeline from {REPO_PATH} ---")
 pipeline = TI2VidTwoStagesHQPipeline(
     loras=[],
     device=DEVICE,
@@ -35,6 +36,7 @@ pipeline = TI2VidTwoStagesHQPipeline(
     checkpoint_path=f"{REPO_PATH}/ltx-2.3-22b-dev.safetensors",
     spatial_upsampler_path=f"{REPO_PATH}/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
 )
+print("--- Pipeline Initialized ---")
 
 
 def upload_video(video_bytes):
@@ -51,6 +53,7 @@ def upload_video(video_bytes):
 
 
 def handler(event):
+    print("--- Received Request ---")
     try:
         validated_input = validate(event["input"], schema)
 
@@ -58,10 +61,12 @@ def handler(event):
             return {"error": validated_input["errors"]}
 
         data = validated_input["validated_input"]
+        print(f"--- Validated Input: {data} ---")
         num_frames = (((data["duration"] * data["frame_rate"]) // 8) * 8) + 1
         images = []
 
         if data["start_frame"] != "None":
+            print(f"--- Downloading Start Frame: {data['start_frame']} ---")
             response = requests.get(data["start_frame"], timeout=60)
             response.raise_for_status()
             images.append(
@@ -71,6 +76,7 @@ def handler(event):
             )
 
         if data["end_frame"] != "None":
+            print(f"--- Downloading End Frame: {data['end_frame']} ---")
             response = requests.get(data["end_frame"], timeout=60)
             response.raise_for_status()
             images.append(
@@ -83,6 +89,10 @@ def handler(event):
 
         tiling_config = TilingConfig.default()
         video_chunks_number = get_video_chunks_number(num_frames, tiling_config)
+
+        print(
+            f"--- Running Pipeline (frames: {num_frames}, size: {data['width']}x{data['height']}, seed: {data['seed']}) ---"
+        )
         video, audio = pipeline(
             images=images,
             seed=data["seed"],
@@ -97,7 +107,9 @@ def handler(event):
             video_guider_params=LTX_2_3_HQ_PARAMS.video_guider_params,
             audio_guider_params=LTX_2_3_HQ_PARAMS.audio_guider_params,
         )
+        print("--- Pipeline Execution Finished ---")
 
+        print("--- Encoding Video ---")
         video_bytes = encode_video(
             video=video,
             audio=audio,
@@ -105,11 +117,14 @@ def handler(event):
             video_chunks_number=video_chunks_number,
         )
 
+        print("--- Uploading Video ---")
         storage_id = upload_video(video_bytes)
 
+        print(f"--- Finished Successfully (storage_id: {storage_id}) ---")
         return {"output": {"storage_id": storage_id}}
 
     except Exception as e:
+        print(f"--- Error in Handler: {str(e)} ---")
         return {"error": str(e)}
 
 
