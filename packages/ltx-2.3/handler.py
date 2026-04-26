@@ -1,4 +1,5 @@
 import os
+import torch
 import runpod
 import requests
 from io import BytesIO
@@ -64,7 +65,7 @@ def upload_video(video_path):
         response.raise_for_status()
         return response.json().get("storageId")
 
-
+@torch.inference_mode()
 def handler(event):
     print("--- Received Request ---")
     tmp_dir = f"/tmp/{event["id"]}"
