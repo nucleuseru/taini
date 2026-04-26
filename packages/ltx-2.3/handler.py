@@ -29,6 +29,7 @@ print(f"--- Loading LTX-2.3 Pipeline from {REPO_PATH} ---")
 pipeline = TI2VidTwoStagesHQPipeline(
     loras=[],
     device=DEVICE,
+    torch_compile=True,
     gemma_root=REPO_PATH,
     distilled_lora=[DISTILLED_LORA],
     distilled_lora_strength_stage_2=0.5,

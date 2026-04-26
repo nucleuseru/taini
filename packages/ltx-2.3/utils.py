@@ -43,7 +43,7 @@ def resolve_snapshot_path(model_id: str) -> str:
 def _write_audio(
     container: av.container.Container, audio_stream: av.audio.AudioStream, audio: Audio
 ) -> None:
-    samples = audio.waveform
+    samples = audio.waveform.detach()
     if samples.ndim == 1:
         samples = samples[:, None]
 
@@ -146,7 +146,7 @@ def encode_video(
         yield from tiles_generator
 
     for video_chunk in tqdm(all_tiles(first_chunk, video), total=video_chunks_number):
-        video_chunk_cpu = video_chunk.to("cpu").numpy()
+        video_chunk_cpu = video_chunk.detach().to("cpu").numpy()
         for frame_array in video_chunk_cpu:
             frame = av.VideoFrame.from_ndarray(frame_array, format="rgb24")
             for packet in stream.encode(frame):
@@ -162,5 +162,6 @@ def encode_video(
     container.close()
 
     buffer.seek(0)
+    data = buffer.getvalue()
 
-    return buffer.read()
+    return data

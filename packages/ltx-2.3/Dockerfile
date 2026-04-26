@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends git python3 \
+RUN apt-get update && apt-get install -y --no-install-recommends git python3 python3-dev build-essential \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN uv venv /app/.venv
@@ -33,7 +33,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-dev build-essential \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.venv /app/.venv
