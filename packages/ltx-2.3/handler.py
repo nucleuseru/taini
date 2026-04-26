@@ -4,7 +4,9 @@ import requests
 from io import BytesIO
 from schema import schema
 from convex import ConvexClient
-from utils import resolve_snapshot_path, encode_video
+from utils import resolve_snapshot_path
+from runpod.serverless.utils.rp_cleanup import clean
+from ltx_pipelines.utils.media_io import encode_video
 from runpod.serverless.utils.rp_validator import validate
 from ltx_pipelines.utils.args import ImageConditioningInput
 from ltx_pipelines.ti2vid_two_stages_hq import TI2VidTwoStagesHQPipeline
@@ -40,21 +42,34 @@ pipeline = TI2VidTwoStagesHQPipeline(
 print("--- Pipeline Initialized ---")
 
 
-def upload_video(video_bytes):
-    response = requests.post(
-        client.mutation("upload:generateUrl"),
-        headers={"Content-Type": "video/mp4"},
-        data=video_bytes,
-        timeout=60,
-    )
-
+def download_image(url, save_path):
+    response = requests.get(url, timeout=60)
     response.raise_for_status()
 
-    return response.json().get("storageId")
+    with open(save_path, "wb") as file:
+        file.write(response.content)
+
+
+def upload_video(video_path):
+    postUrl = client.mutation("upload:generateUrl")
+
+    with open(video_path, "rb") as video_bytes:
+        response = requests.post(
+            postUrl,
+            headers={"Content-Type": "video/mp4"},
+            data=video_bytes,
+            timeout=60,
+        )
+
+        response.raise_for_status()
+        return response.json().get("storageId")
 
 
 def handler(event):
     print("--- Received Request ---")
+    tmp_dir = f"/tmp/{event["id"]}"
+    output_path = f"{tmp_dir}/output.mp4"
+
     try:
         validated_input = validate(event["input"], schema)
 
@@ -62,6 +77,8 @@ def handler(event):
             return {"error": validated_input["errors"]}
 
         data = validated_input["validated_input"]
+        os.makedirs(tmp_dir, exist_ok=True)
+
         print(f"--- Validated Input: {data} ---")
         num_frames = (((data["duration"] * data["frame_rate"]) // 8) * 8) + 1
         images = []
@@ -111,15 +128,16 @@ def handler(event):
         print("--- Pipeline Execution Finished ---")
 
         print("--- Encoding Video ---")
-        video_bytes = encode_video(
+        encode_video(
             video=video,
             audio=audio,
             fps=data["frame_rate"],
+            output_path=output_path,
             video_chunks_number=video_chunks_number,
         )
 
         print("--- Uploading Video ---")
-        storage_id = upload_video(video_bytes)
+        storage_id = upload_video(output_path)
 
         print(f"--- Finished Successfully (storage_id: {storage_id}) ---")
         return {"output": {"storage_id": storage_id}}
@@ -127,6 +145,8 @@ def handler(event):
     except Exception as e:
         print(f"--- Error in Handler: {str(e)} ---")
         return {"error": str(e)}
+    finally:
+        clean(folder_list=[tmp_dir])
 
 
 runpod.serverless.start({"handler": handler})
