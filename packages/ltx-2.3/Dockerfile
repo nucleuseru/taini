@@ -16,7 +16,7 @@ RUN uv venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-RUN uv pip install --no-cache-dir requests runpod convex \
+RUN uv pip install --no-cache-dir asyncio requests runpod convex \
     "git+https://github.com/Lightricks/LTX-2.git#subdirectory=packages/ltx-core" \
     "git+https://github.com/Lightricks/LTX-2.git#subdirectory=packages/ltx-pipelines" \
     transformers==4.57.6 torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 \
