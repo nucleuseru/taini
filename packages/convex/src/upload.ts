@@ -1,6 +1,7 @@
-import { authMutation } from "./function";
+/* eslint-disable no-restricted-imports */
+import { mutation } from "./_generated/server";
 
-export const generateUrl = authMutation({
+export const generateUrl = mutation({
   args: {},
   handler: (ctx) => ctx.storage.generateUploadUrl(),
 });
