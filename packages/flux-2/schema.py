@@ -1,10 +1,12 @@
-schema = {
-    "prompt": {"type": str, "required": True},
-    "seed": {"type": int, "default": 0, "required": False},
-    "width": {"type": int, "default": 1024, "required": False},
-    "height": {"type": int, "default": 1024, "required": False},
-    "num_steps": {"type": int, "default": 8, "required": False},
-    "guidance": {"type": float, "default": 4.5, "required": False},
-    "input_images": {"type": str, "default": "None", "required": False},
-    "num_images_per_prompt": {"type": int, "default": 1, "required": False},
-}
+from pydantic import BaseModel
+
+
+class InputSchema(BaseModel):
+    prompt: str
+    seed: int = 1
+    width: int = 1024
+    height: int = 1024
+    num_images: int = 1
+    guidance: float = 4.5
+    inference_steps: int = 8
+    input_images: list[str] = []

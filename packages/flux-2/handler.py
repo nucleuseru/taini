@@ -2,25 +2,21 @@ import os
 import io
 import torch
 import runpod
-import random
 import requests
-from schema import schema
+from schema import InputSchema
 from convex import ConvexClient
 from diffusers import Flux2Pipeline
 from diffusers.utils import load_image
 from utils import resolve_snapshot_path
-from runpod.serverless.utils.rp_validator import validate
 
-
-DEVICE = "cuda:0"
-TORCH_DTYPE = torch.bfloat16
-REPO_PATH = resolve_snapshot_path("nucleuseru/flux-2")
 TURBO_SIGMAS = [1.0, 0.6509, 0.4374, 0.2932, 0.1893, 0.1108, 0.0495, 0.00031]
 
 
+device = "cuda:0"
 client = ConvexClient(os.getenv("CONVEX_URL"))
-pipe = Flux2Pipeline.from_pretrained(REPO_PATH, torch_dtype=TORCH_DTYPE)
-pipe.load_lora_weights(REPO_PATH, weight_name="flux.2-turbo-lora.safetensors")
+repo_path = resolve_snapshot_path("nucleuseru/flux-2")
+pipe = Flux2Pipeline.from_pretrained(repo_path, torch_dtype=torch.bfloat16)
+pipe.load_lora_weights(repo_path, weight_name="flux.2-turbo-lora.safetensors")
 pipe.enable_model_cpu_offload()
 
 
@@ -37,52 +33,33 @@ def upload_image(image):
     )
 
     response.raise_for_status()
-
     return response.json().get("storageId")
 
 
-def handler(event):
+def handler(job):
     try:
-        validated_input = validate(event["input"], schema)
-
-        if "errors" in validated_input:
-            return {"error": validated_input["errors"]}
-
-        data = validated_input["validated_input"]
-
-        generator = torch.Generator(device=DEVICE).manual_seed(
-            data["seed"] if data["seed"] != 0 else random.randint(0, 2**32 - 1)
-        )
-
-        images = None
-
-        if data["input_images"] != "None":
-            images = [
-                load_image(img)
-                for img in data["input_images"].replace(" ", "").split(",")
-            ]
+        data = InputSchema.model_validate(job["input"])
+        images = [load_image(img) for img in data.input_images]
+        generator = torch.Generator(device=device).manual_seed(data.seed)
 
         output = pipe(
-            prompt=data["prompt"],
+            prompt=data.prompt,
             image=images,
+            width=data.width,
+            height=data.height,
             generator=generator,
             sigmas=TURBO_SIGMAS,
-            width=data["width"],
-            height=data["height"],
-            guidance_scale=data["guidance"],
-            num_inference_steps=data["num_steps"],
-            num_images_per_prompt=data["num_images_per_prompt"],
+            guidance_scale=data.guidance,
+            num_images_per_prompt=data.num_images,
+            num_inference_steps=data.inference_steps,
         )
 
-        storage_ids = []
-
-        for img in output.images:
-            storage_ids.append(upload_image(img))
-
+        storage_ids = [upload_image(img) for img in output.images]
         return {"output": {"storage_ids": storage_ids}}
 
     except Exception as e:
         return {"error": str(e)}
 
 
-runpod.serverless.start({"handler": handler})
+if __name__ == "__main__":
+    runpod.serverless.start({"handler": handler})
