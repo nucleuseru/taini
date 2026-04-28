@@ -60,9 +60,11 @@ def handler(job):
         generator = torch.Generator(device=device).manual_seed(data.seed)
 
         # Load input images for conditioning
+        images = None
+
         if data.input_images:
             print(f"--- Loading {len(data.input_images)} input images... ---")
-        images = [load_image(img) for img in data.input_images]
+            images = [load_image(img) for img in data.input_images]
 
         # Run inference using Flux.2 pipeline
         print("--- Starting inference ---")

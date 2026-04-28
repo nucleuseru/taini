@@ -1,26 +1,45 @@
-FROM pytorch/pytorch:2.11.0-cuda12.6-cudnn9-runtime
+FROM nvidia/cuda:12.9.1-base-ubuntu24.04 AS builder
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+COPY --from=ghcr.io/astral-sh/uv:0.11.6 /uv /uvx /bin/
 
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    sox ffmpeg libsndfile1 libsox-fmt-all python3.12-venv \
-    && apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive \
+    UV_LINK_MODE=copy \
+    UV_HTTP_TIMEOUT=300 \
+    UV_COMPILE_BYTECODE=1
 
 WORKDIR /app
 
-RUN python3 -m venv /app/venv
-ENV PATH="/app/venv/bin:$PATH"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sox ffmpeg libsndfile1 libsox-fmt-all python3 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-RUN pip3 install --no-cache-dir -U qwen-tts runpod soundfile "huggingface_hub[cli]" && \
-    huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-Base --local-dir ./Qwen3-TTS-12Hz-1.7B-Base
+RUN uv venv /app/.venv
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+RUN uv pip install --no-cache-dir requests pydantic qwen-tts runpod convex \
+    torch==2.8.0 torchaudio==2.8.0 \
+    --index https://download.pytorch.org/whl/cu129 --index https://pypi.nvidia.com
 
 
-COPY handler.py .
+FROM nvidia/cuda:12.9.1-base-ubuntu24.04
 
-CMD ["python3", "-u", "handler.py"]
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sox ffmpeg libsndfile1 libsox-fmt-all python3 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/.venv /app/.venv
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+COPY handler.py schema.py utils.py ./
+
+CMD ["python", "-u", "handler.py"]

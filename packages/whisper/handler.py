@@ -6,7 +6,7 @@ from schema import InputSchema
 from utils import resolve_snapshot_path
 from faster_whisper import WhisperModel, BatchedInferencePipeline
 
-GPU_CONCURRENCY = int(os.getenv("GPU_CONCURRENCY", "8"))
+GPU_CONCURRENCY = int(os.getenv("GPU_CONCURRENCY", "4"))
 gpu_semaphore = threading.Semaphore(GPU_CONCURRENCY)
 
 repo_path = resolve_snapshot_path("nucleuseru/whisper")

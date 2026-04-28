@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -9,4 +10,4 @@ class InputSchema(BaseModel):
     num_images: int = 1
     guidance: float = 4.5
     inference_steps: int = 8
-    input_images: list[str] = []
+    input_images: Optional[list[str]] = None

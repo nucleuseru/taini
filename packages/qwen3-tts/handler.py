@@ -1,127 +1,95 @@
-import os
 import torch
 import runpod
-import soundfile as sf
-import io
-import base64
 from qwen_tts import Qwen3TTSModel
-
-
-# Global configuration
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
-dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
-
-print(f"Loading Qwen3-TTS model on {device}...")
-
-model = Qwen3TTSModel.from_pretrained(
-    "/app/Qwen3-TTS-12Hz-1.7B-Base",
-    device_map=device,
-    dtype=dtype,
+from schema import InputSchema, VoiceCloneInputSchema, GenerateInputSchema
+from utils import (
+    resolve_snapshot_path,
+    download_prompt_item,
+    upload_prompt_item,
+    upload_audio,
 )
 
-print("Model loaded successfully.")
+# --- Initialization ---
+device = "cuda:0"
+print(f"--- [INIT] Initializing Qwen3-TTS on {device} ---")
+
+repo_path = resolve_snapshot_path("nucleuseru/qwen3-tts")
+model_path = f"{repo_path}/Qwen3-TTS-12Hz-1.7B-Base"
+
+# Initialize Qwen3-TTS model
+model = Qwen3TTSModel.from_pretrained(
+    model_path,
+    device_map=device,
+    dtype=torch.bfloat16,
+)
+print("--- [INIT] Qwen3-TTS Model initialized successfully ---")
 
 
+# --- RunPod Handler ---
+
+
+@torch.inference_mode()
 def handler(job):
     """
-    Processes incoming TTS and Voice Cloning requests.
-    Supports batch generation and reusable voice clone prompts.
+    Main RunPod handler that processes Qwen3-TTS generation and voice cloning requests.
     """
-    job_input = job.get("input", {})
-    action = job_input.get("action", "generate")
-
     try:
-        if action == "create_prompt":
-            ref_audio = job_input.get("ref_audio")
-            ref_text = job_input.get("ref_text")
-            x_vector_only_mode = job_input.get("x_vector_only_mode", False)
+        # Validate base input and identify task
+        data = InputSchema.model_validate(job["input"])
+        print(f"--- Starting request | Task: {data.task} ---")
 
-            if not ref_audio or not ref_text:
-                return {
-                    "error": "action 'create_prompt' requires both 'ref_audio' and 'ref_text'"
-                }
-
-            print(f"Creating reusable voice clone prompt for audio: {ref_audio}")
-            prompt_items = model.create_voice_clone_prompt(
-                ref_audio=ref_audio,
-                ref_text=ref_text,
-                x_vector_only_mode=x_vector_only_mode,
-            )
-
-            # Serialize prompt_items to base64
-            buffer = io.BytesIO()
-            torch.save(prompt_items, buffer)
-            prompt_base64 = base64.encodebytes(buffer.getvalue()).decode("utf-8")
-
-            return {"voice_clone_prompt": prompt_base64}
-
-        elif action == "generate":
-            text = job_input.get("text")
-            language = job_input.get("language", "English")
-            ref_audio = job_input.get("ref_audio")
-            ref_text = job_input.get("ref_text")
-            voice_clone_prompt_base64 = job_input.get("voice_clone_prompt")
-
-            if not text:
-                return {"error": "Missing 'text' in input"}
-
-            # Standardize text and language to lists for batch processing
-            texts = [text] if isinstance(text, str) else text
-            languages = (
-                [language] * len(texts) if isinstance(language, str) else language
-            )
+        if data.task == "generate":
+            # Process voice generation/cloning task
+            data = GenerateInputSchema.model_validate(job["input"])
+            print(f"--- Task: Generate | Text: {data.text[:100]}... ---")
 
             prompt_items = None
-            if voice_clone_prompt_base64:
-                # Deserialize provided prompt
-                print("Using provided voice_clone_prompt...")
-                prompt_data = base64.b64decode(voice_clone_prompt_base64)
-                # Note: using weights_only=False as prompt_items might be a dict of tensors/objects
-                prompt_items = torch.load(io.BytesIO(prompt_data), map_location=device)
-            elif ref_audio and ref_text:
-                # Create prompt on the fly
-                print(f"Creating prompt on the fly for audio: {ref_audio}")
-                prompt_items = model.create_voice_clone_prompt(
-                    ref_audio=ref_audio,
-                    ref_text=ref_text,
+            if data.voice_clone_prompt:
+                print(
+                    f"--- Downloading {len(data.voice_clone_prompt)} prompt items... ---"
                 )
-            else:
-                return {
-                    "error": "Generation requires 'ref_audio'/'ref_text' OR a 'voice_clone_prompt'"
-                }
+                prompt_items = [
+                    download_prompt_item(url, device) for url in data.voice_clone_prompt
+                ]
 
-            # Generate audios
-            print(f"Generating {len(texts)} voice clone(s)...")
+            # Run inference
+            print("--- Starting voice generation ---")
             wavs, sr = model.generate_voice_clone(
-                text=texts,
-                language=languages,
+                text=data.text,
+                language=data.language,
+                ref_text=data.ref_text,
+                ref_audio=data.ref_audio,
                 voice_clone_prompt=prompt_items,
+                x_vector_only_mode=data.x_vector_only_mode,
             )
+            print("--- Generation complete | Uploading audio... ---")
 
-            # Encode all generated wavs to base64
-            audios_base64 = []
-            for wav in wavs:
-                buffer = io.BytesIO()
-                sf.write(buffer, wav, sr, format="WAV")
-                audios_base64.append(
-                    base64.b64encode(buffer.getvalue()).decode("utf-8")
-                )
+            # Upload generated audio to storage
+            storage_ids = [upload_audio(wav, sr) for wav in wavs]
+            print(f"--- Finished | Storage IDs: {storage_ids} ---")
 
-            # If only one audio was requested, return it directly in the old format as well for compatibility
-            response = {"audios": audios_base64, "sample_rate": sr, "format": "wav"}
-            if len(audios_base64) == 1:
-                response["audio_base64"] = audios_base64[0]
-
-            return response
+            return {"output": {"storage_ids": storage_ids}}
 
         else:
-            return {"error": f"Unknown action: {action}"}
+            # Process voice clone prompt creation
+            print("--- Task: Create Voice Clone Prompt ---")
+            data = VoiceCloneInputSchema.model_validate(job["input"])
+
+            # Create the clone prompt items
+            prompt_items = model.create_voice_clone_prompt(
+                ref_text=data.ref_text,
+                ref_audio=data.ref_audio,
+                x_vector_only_mode=data.x_vector_only_mode,
+            )
+
+            # Upload prompt items to storage
+            storage_ids = [upload_prompt_item(pt) for pt in prompt_items]
+            print(f"--- Finished | Storage IDs: {storage_ids} ---")
+
+            return {"output": {"storage_ids": storage_ids}}
 
     except Exception as e:
-        print(f"Error during Qwen3-TTS execution: {str(e)}")
-        import traceback
-
-        traceback.print_exc()
+        print(f"--- ERROR: {str(e)} ---")
         return {"error": str(e)}
 
 
