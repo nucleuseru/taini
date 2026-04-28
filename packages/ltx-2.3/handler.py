@@ -5,8 +5,7 @@ import runpod
 import requests
 from schema import InputSchema
 from convex import ConvexClient
-from utils import resolve_snapshot_path
-from ltx_pipelines.utils.media_io import encode_video
+from utils import resolve_snapshot_path, encode_video
 from ltx_pipelines.utils.args import ImageConditioningInput
 from ltx_pipelines.ti2vid_two_stages_hq import TI2VidTwoStagesHQPipeline
 from ltx_core.model.video_vae import TilingConfig, get_video_chunks_number
@@ -47,10 +46,8 @@ def download_img(url):
 
 
 def upload_video(video_bytes):
-    post_url = client.mutation("upload:generateUrl")
-
     response = requests.post(
-        post_url,
+        client.mutation("upload:generateUrl"),
         headers={"Content-Type": "video/mp4"},
         data=video_bytes,
         timeout=60,
@@ -68,9 +65,7 @@ def handler(job):
     try:
         # Validate input and calculate required frames
         data = InputSchema.model_validate(job["input"])
-        print(
-            f"--- Starting request | Prompt: {data.prompt[:100]}... ---"
-        )
+        print(f"--- Starting request | Prompt: {data.prompt[:100]}... ---")
         num_frames = (((data.duration * data.frame_rate) // 8) * 8) + 1
         images = []
 
@@ -120,25 +115,22 @@ def handler(job):
         print(f"--- Inference complete | Encoding video... ---")
 
         # Encode generated tensors to MP4
-        buffer = io.BytesIO()
-        encode_video(
+        buffer = encode_video(
             video=video,
             audio=audio,
             fps=data.frame_rate,
-            output_path=buffer,
             video_chunks_number=video_chunks_number,
         )
 
         # Upload result to storage
         print(f"--- Uploading video to Convex... ---")
-        buffer.seek(0)
         storage_id = upload_video(buffer.getvalue())
         print(f"--- Finished | Storage ID: {storage_id} ---")
 
         return {"output": {"storage_id": storage_id}}
 
     except Exception as e:
-        print(f"--- [JOB {job['id']}] ERROR: {str(e)} ---")
+        print(f"--- ERROR: {str(e)} ---")
         return {"error": str(e)}
 
 
