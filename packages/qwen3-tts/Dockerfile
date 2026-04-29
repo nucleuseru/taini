@@ -26,9 +26,7 @@ FROM nvidia/cuda:12.9.1-base-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    HF_HUB_OFFLINE=1 \
-    TRANSFORMERS_OFFLINE=1
+    PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
@@ -39,6 +37,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /app/.venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
+
+RUN python - <<'PY'
+import torch
+from qwen_tts import Qwen3TTSModel
+Qwen3TTSModel.from_pretrained(
+    "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+    device_map="cpu",
+    dtype=torch.bfloat16,
+)
+PY
 
 COPY handler.py schema.py utils.py ./
 

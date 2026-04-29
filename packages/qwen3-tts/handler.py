@@ -1,24 +1,16 @@
 import torch
 import runpod
 from qwen_tts import Qwen3TTSModel
+from utils import download_prompt_item, upload_prompt_item, upload_audio
 from schema import InputSchema, VoiceCloneInputSchema, GenerateInputSchema
-from utils import (
-    resolve_snapshot_path,
-    download_prompt_item,
-    upload_prompt_item,
-    upload_audio,
-)
 
 # --- Initialization ---
 device = "cuda:0"
 print(f"--- [INIT] Initializing Qwen3-TTS on {device} ---")
-
-repo_path = resolve_snapshot_path("nucleuseru/qwen3-tts")
-model_path = f"{repo_path}/Qwen3-TTS-12Hz-1.7B-Base"
-
-# Initialize Qwen3-TTS model
 model = Qwen3TTSModel.from_pretrained(
-    model_path, device_map=device, dtype=torch.bfloat16, local_files_only=True
+    "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+    device_map=device,
+    dtype=torch.bfloat16,
 )
 print("--- [INIT] Qwen3-TTS Model initialized successfully ---")
 

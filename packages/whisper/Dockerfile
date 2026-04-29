@@ -9,32 +9,36 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+RUN apt-get update && apt-get install -y --no-install-recommends python3 ffmpeg \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN uv venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-RUN uv pip install --no-cache-dir asyncio runpod pydantic faster-whisper
+RUN uv pip install --no-cache-dir -U asyncio runpod pydantic openai-whisper
 
 
 FROM nvidia/cuda:12.3.2-cudnn9-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    HF_HUB_OFFLINE=1 \
-    TRANSFORMERS_OFFLINE=1 
+    PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+RUN apt-get update && apt-get install -y --no-install-recommends python3 ffmpeg \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
+
+RUN python - <<'PY'
+import os, whisper
+model = os.getenv("WHISPER_MODEL", "turbo")
+whisper.load_model(model)
+PY
 
 COPY handler.py schema.py utils.py ./
 

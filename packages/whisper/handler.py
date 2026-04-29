@@ -1,51 +1,35 @@
 import os
 import runpod
 import asyncio
+import whisper
 import threading
-from dataclasses import asdict
 from schema import InputSchema
-from utils import resolve_snapshot_path
-from faster_whisper import WhisperModel, BatchedInferencePipeline
 
-GPU_CONCURRENCY = int(os.getenv("GPU_CONCURRENCY", "4"))
+GPU_CONCURRENCY = int(os.getenv("GPU_CONCURRENCY", "2"))
 gpu_semaphore = threading.Semaphore(GPU_CONCURRENCY)
+model_size = os.getenv("WHISPER_MODEL", "turbo")
 
-repo_path = resolve_snapshot_path("nucleuseru/whisper")
-model_size = os.getenv("MODEL_SIZE", "whisper-large-v3")
-model_path = f"{repo_path}/faster-{model_size}"
-
-print(f"--- [INIT] Loading Whisper model: {model_size} from {model_path} ---")
 print(f"--- [INIT] GPU Concurrency Limit: {GPU_CONCURRENCY} ---")
-
-model = WhisperModel(
-    model_path, device="cuda", compute_type="float16", local_files_only=True
-)
-batched_model = BatchedInferencePipeline(model=model)
+print(f"--- [INIT] Loading Whisper model: {model_size} ---")
+model = whisper.load_model(model_size)
 print("--- [INIT] Whisper model loaded successfully ---")
 
 
 def run_transcription(data):
     """
-    Run transcription/translation in a separate thread to avoid blocking the event loop.
+    Run transcription in a separate thread to avoid blocking the event loop.
     Uses a GPU semaphore to manage concurrent access to the model.
     """
     with gpu_semaphore:
-        print(f"--- Starting transcription/translation | Audio: {data.audio_url} ---")
-        segments, _ = batched_model.transcribe(
+        print(f"--- Starting transcription | Audio: {data.audio_url} ---")
+        result = model.transcribe(
             data.audio_url,
-            task=data.task,
-            language=data.language,
-            batch_size=data.batch_size,
-            multilingual=data.multilingual,
             word_timestamps=data.word_timestamps,
-            without_timestamps=data.without_timestamps,
         )
-
-        # The transcription actually runs when we iterate over the segments generator
-        results = [asdict(segment) for segment in segments]
-
-        print(f"--- Transcription complete | Generated {len(results)} segments ---")
-        return results
+        print(
+            f"--- Transcription complete | Generated {len(result['segments'])} segments ---"
+        )
+        return result["segments"]
 
 
 async def handler(job):
