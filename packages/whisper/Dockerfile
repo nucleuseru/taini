@@ -9,6 +9,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN uv venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
@@ -25,6 +28,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TRANSFORMERS_OFFLINE=1 
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.venv /app/.venv
 
