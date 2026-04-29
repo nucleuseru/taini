@@ -40,6 +40,6 @@ model = os.getenv("WHISPER_MODEL", "turbo")
 whisper.load_model(model)
 PY
 
-COPY handler.py schema.py utils.py ./
+COPY handler.py schema.py ./
 
 CMD ["python", "-u", "handler.py"]
