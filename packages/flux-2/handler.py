@@ -85,7 +85,7 @@ def handler(job):
         storage_ids = [upload_image(img) for img in output.images]
         print(f"--- Finished | Storage IDs: {storage_ids} ---")
 
-        return {"output": {"storage_ids": storage_ids}}
+        return {"storage_ids": storage_ids}
 
     except Exception as e:
         print(f"--- ERROR: {str(e)} ---")

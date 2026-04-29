@@ -2,6 +2,7 @@ import os
 import runpod
 import asyncio
 import threading
+from dataclasses import asdict
 from schema import InputSchema
 from utils import resolve_snapshot_path
 from faster_whisper import WhisperModel, BatchedInferencePipeline
@@ -41,7 +42,7 @@ def run_transcription(data):
         )
 
         # The transcription actually runs when we iterate over the segments generator
-        results = [segment._asdict() for segment in segments]
+        results = [asdict(segment) for segment in segments]
 
         print(f"--- Transcription complete | Generated {len(results)} segments ---")
         return results
@@ -54,7 +55,7 @@ async def handler(job):
 
         segments = await asyncio.to_thread(run_transcription, data)
 
-        return {"output": {"segments": segments}}
+        return {"segments": segments}
 
     except Exception as e:
         print(f"--- ERROR: {str(e)} ---")

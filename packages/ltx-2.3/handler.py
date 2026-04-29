@@ -127,7 +127,7 @@ def handler(job):
         storage_id = upload_video(buffer.getvalue())
         print(f"--- Finished | Storage ID: {storage_id} ---")
 
-        return {"output": {"storage_id": storage_id}}
+        return {"storage_id": storage_id}
 
     except Exception as e:
         print(f"--- ERROR: {str(e)} ---")

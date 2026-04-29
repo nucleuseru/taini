@@ -18,9 +18,7 @@ model_path = f"{repo_path}/Qwen3-TTS-12Hz-1.7B-Base"
 
 # Initialize Qwen3-TTS model
 model = Qwen3TTSModel.from_pretrained(
-    model_path,
-    device_map=device,
-    dtype=torch.bfloat16,
+    model_path, device_map=device, dtype=torch.bfloat16, local_files_only=True
 )
 print("--- [INIT] Qwen3-TTS Model initialized successfully ---")
 
@@ -68,7 +66,7 @@ def handler(job):
             storage_ids = [upload_audio(wav, sr) for wav in wavs]
             print(f"--- Finished | Storage IDs: {storage_ids} ---")
 
-            return {"output": {"storage_ids": storage_ids}}
+            return {"storage_ids": storage_ids}
 
         else:
             # Process voice clone prompt creation
@@ -86,7 +84,7 @@ def handler(job):
             storage_ids = [upload_prompt_item(pt) for pt in prompt_items]
             print(f"--- Finished | Storage IDs: {storage_ids} ---")
 
-            return {"output": {"storage_ids": storage_ids}}
+            return {"storage_ids": storage_ids}
 
     except Exception as e:
         print(f"--- ERROR: {str(e)} ---")
