@@ -1,8 +1,13 @@
 import torch
 import runpod
 from qwen_tts import Qwen3TTSModel
-from utils import download_prompt_item, upload_prompt_item, upload_audio
 from schema import InputSchema, VoiceCloneInputSchema, GenerateInputSchema
+from utils import (
+    download_prompt_item,
+    upload_prompt_item,
+    upload_audio,
+    download_audio_as_np,
+)
 
 # --- Initialization ---
 device = "cuda:0"
@@ -42,13 +47,18 @@ def handler(job):
                     download_prompt_item(url, device) for url in data.voice_clone_prompt
                 ]
 
+            ref_audio_np = None
+            if data.ref_audio:
+                print(f"--- Downloading ref audio: {data.ref_audio} ---")
+                ref_audio_np = [download_audio_as_np(url) for url in data.ref_audio]
+
             # Run inference
             print("--- Starting voice generation ---")
             wavs, sr = model.generate_voice_clone(
                 text=data.text,
                 language=data.language,
                 ref_text=data.ref_text,
-                ref_audio=data.ref_audio,
+                ref_audio=ref_audio_np,
                 voice_clone_prompt=prompt_items,
                 x_vector_only_mode=data.x_vector_only_mode,
             )
@@ -64,11 +74,12 @@ def handler(job):
             # Process voice clone prompt creation
             print("--- Task: Create Voice Clone Prompt ---")
             data = VoiceCloneInputSchema.model_validate(job["input"])
+            ref_audio_np = [download_audio_as_np(url) for url in data.ref_audio]
 
             # Create the clone prompt items
             prompt_items = model.create_voice_clone_prompt(
                 ref_text=data.ref_text,
-                ref_audio=data.ref_audio,
+                ref_audio=ref_audio_np,
                 x_vector_only_mode=data.x_vector_only_mode,
             )
 

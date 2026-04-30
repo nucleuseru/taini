@@ -29,7 +29,7 @@ def run_transcription(data):
         print(
             f"--- Transcription complete | Generated {len(result['segments'])} segments ---"
         )
-        return result["segments"]
+        return result
 
 
 async def handler(job):
@@ -37,9 +37,9 @@ async def handler(job):
         # Validate input using InputSchema
         data = InputSchema.model_validate(job["input"])
 
-        segments = await asyncio.to_thread(run_transcription, data)
+        result = await asyncio.to_thread(run_transcription, data)
 
-        return {"segments": segments}
+        return result
 
     except Exception as e:
         print(f"--- ERROR: {str(e)} ---")

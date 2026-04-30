@@ -2,12 +2,26 @@ import os
 import io
 import torch
 import requests
+import numpy as np
 import soundfile as sf
 from dataclasses import asdict
 from convex import ConvexClient
 from qwen_tts import VoiceClonePromptItem
 
 client = ConvexClient(os.getenv("CONVEX_URL"))
+
+
+def download_audio_as_np(url: str) -> np.ndarray:
+    response = requests.get(url, timeout=60)
+    response.raise_for_status()
+
+    with io.BytesIO(response.content) as buffer:
+        audio, _ = sf.read(buffer, dtype="float32", always_2d=False)
+
+    if audio.ndim > 1:
+        audio = np.mean(audio, axis=-1)
+
+    return audio.astype(np.float32)
 
 
 def download_prompt_item(url: str, device: str = "cuda:0") -> VoiceClonePromptItem:
