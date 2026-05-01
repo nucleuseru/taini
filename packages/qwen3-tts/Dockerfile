@@ -17,8 +17,8 @@ RUN uv venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-RUN uv pip install --no-cache-dir requests asyncio pydantic qwen-tts runpod convex \
-    torch==2.8.0 torchaudio==2.8.0 \
+RUN uv pip install --no-cache-dir -U requests asyncio pydantic qwen-tts runpod convex
+RUN uv pip install --no-cache-dir torch==2.8.0 torchaudio==2.8.0 \
     --index https://download.pytorch.org/whl/cu129 --index https://pypi.nvidia.com
 
 
