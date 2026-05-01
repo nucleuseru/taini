@@ -1,11 +1,18 @@
+import os
 import torch
 import runpod
+import asyncio
+import threading
 from qwen_tts import Qwen3TTSModel
 from utils import download_prompt_item, upload_prompt_item, upload_audio
 from schema import InputSchema, VoiceCloneInputSchema, GenerateInputSchema
 
+GPU_CONCURRENCY = int(os.getenv("GPU_CONCURRENCY", "4"))
+gpu_semaphore = threading.Semaphore(GPU_CONCURRENCY)
+
 # --- Initialization ---
 device = "cuda:0"
+print(f"--- [INIT] GPU Concurrency Limit: {GPU_CONCURRENCY} ---")
 print(f"--- [INIT] Initializing Qwen3-TTS on {device} ---")
 model = Qwen3TTSModel.from_pretrained(
     "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
@@ -16,14 +23,12 @@ print("--- [INIT] Qwen3-TTS Model initialized successfully ---")
 
 
 # --- RunPod Handler ---
-
-
-@torch.inference_mode()
-def handler(job):
+def run_inference(job):
     """
-    Main RunPod handler that processes Qwen3-TTS generation and voice cloning requests.
+    Run inference in a separate thread to avoid blocking the event loop.
+    Uses a GPU semaphore to manage concurrent access to the model.
     """
-    try:
+    with gpu_semaphore:
         # Validate base input and identify task
         data = InputSchema.model_validate(job["input"])
         print(f"--- Starting request | Task: {data.task} ---")
@@ -78,10 +83,25 @@ def handler(job):
 
             return {"storage_ids": storage_ids}
 
+
+async def handler(job):
+    """
+    Main RunPod handler that processes Qwen3-TTS generation and voice cloning requests.
+    """
+    try:
+        result = await asyncio.to_thread(run_inference, job)
+        return result
+
     except Exception as e:
         print(f"--- ERROR: {str(e)} ---")
         return {"error": str(e)}
 
 
+def adjust_concurrency(_current_concurrency):
+    return GPU_CONCURRENCY
+
+
 if __name__ == "__main__":
-    runpod.serverless.start({"handler": handler})
+    runpod.serverless.start(
+        {"handler": handler, "concurrency_modifier": adjust_concurrency}
+    )
