@@ -11,6 +11,7 @@ export const sleep = (delay: number) => {
 
 export const generationStatusValidator = v.union(
   v.literal("pending"),
+  v.literal("queued"),
   v.literal("generating"),
   v.literal("completed"),
   v.literal("failed"),

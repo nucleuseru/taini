@@ -41,9 +41,11 @@ export const update = authMutation({
     id: v.id("storyboard"),
     threadId: StoryboardFields.threadId,
     script: v.optional(StoryboardFields.script),
-    width: v.optional(StoryboardFields.width),
-    height: v.optional(StoryboardFields.height),
-    frameRate: v.optional(StoryboardFields.frameRate),
+    width: StoryboardFields.width,
+    height: StoryboardFields.height,
+    frameRate: StoryboardFields.frameRate,
+    style: StoryboardFields.style,
+    referenceStyle: StoryboardFields.referenceStyle,
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;

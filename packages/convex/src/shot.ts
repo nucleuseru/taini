@@ -20,8 +20,8 @@ export const UpdateShotArgsValidator = v.object({
   title: v.optional(ShotFields.title),
   order: v.optional(ShotFields.order),
   duration: v.optional(ShotFields.duration),
-  selectedEndFrame: v.optional(ShotFields.selectedEndFrame),
   selectedStartFrame: v.optional(ShotFields.selectedStartFrame),
+  selectedEndFrame: v.optional(ShotFields.selectedEndFrame),
   selectedVideoClip: v.optional(ShotFields.selectedVideoClip),
 });
 

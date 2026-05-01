@@ -88,6 +88,19 @@ export const CharacterFields = {
   ),
 };
 
+export const ItemFields = {
+  projectId: v.id("project"),
+  name: v.string(),
+  description: optional(v.string()),
+  referenceImages: v.array(
+    v.object({
+      name: v.string(),
+      description: v.string(),
+      imageId: v.id("image"),
+    }),
+  ),
+};
+
 export const EnvironmentFields = {
   projectId: v.id("project"),
   name: v.string(),
@@ -124,8 +137,10 @@ export const StoryboardFields = {
   projectId: v.id("project"),
   script: v.string(),
   threadId: optional(v.string()),
+  style: optional(v.string()),
   width: optional(v.number()),
   height: optional(v.number()),
+  referenceStyle: optional(v.id("image")),
   frameRate: optional(
     v.union(v.literal("24"), v.literal("30"), v.literal("60")),
   ),
@@ -136,23 +151,46 @@ export const tables = {
     fields: ["userId"],
   }),
 
-  image: defineTable(ImageFields).index("by_project_id", {
-    fields: ["projectId"],
-  }),
+  image: defineTable(ImageFields)
+    .index("by_project_id", {
+      fields: ["projectId"],
+    })
+    .index("by_job_id", {
+      fields: ["jobId"],
+    }),
 
-  video: defineTable(VideoFields).index("by_project_id", {
-    fields: ["projectId"],
-  }),
+  video: defineTable(VideoFields)
+    .index("by_project_id", {
+      fields: ["projectId"],
+    })
+    .index("by_job_id", {
+      fields: ["jobId"],
+    }),
 
-  audio: defineTable(AudioFields).index("by_project_id", {
-    fields: ["projectId"],
-  }),
+  audio: defineTable(AudioFields)
+    .index("by_project_id", {
+      fields: ["projectId"],
+    })
+    .index("by_tts_job_id", {
+      fields: ["ttsJobId"],
+    })
+    .index("by_stt_job_id", {
+      fields: ["sttJobId"],
+    }),
 
-  voice: defineTable(VoiceFields).index("by_project_id", {
-    fields: ["projectId"],
-  }),
+  voice: defineTable(VoiceFields)
+    .index("by_project_id", {
+      fields: ["projectId"],
+    })
+    .index("by_job_id", {
+      fields: ["jobId"],
+    }),
 
   character: defineTable(CharacterFields).index("by_project_id", {
+    fields: ["projectId"],
+  }),
+
+  item: defineTable(ItemFields).index("by_project_id", {
     fields: ["projectId"],
   }),
 
