@@ -14,15 +14,15 @@ export const ListVideoArgsValidator = v.object({
 
 export const GenerateVideoArgsValidator = v.object({
   prompt: v.string(),
-  audio: VideoFields.audio,
+  seed: VideoFields.seed,
+  width: VideoFields.width,
+  height: VideoFields.height,
   duration: VideoFields.duration,
   projectId: VideoFields.projectId,
   frameRate: VideoFields.frameRate,
-  resolution: VideoFields.resolution,
-  referenceImage: VideoFields.referenceImage,
-  referenceVideo: VideoFields.referenceVideo,
-  referenceAudio: VideoFields.referenceAudio,
-  referenceAudioStart: VideoFields.referenceAudioStart,
+  startFrame: VideoFields.startFrame,
+  endFrame: VideoFields.endFrame,
+  negativePrompt: VideoFields.negativePrompt,
 });
 
 export const UploadVideoArgsValidator = v.object({

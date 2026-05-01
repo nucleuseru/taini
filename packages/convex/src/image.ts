@@ -14,8 +14,10 @@ export const ListImageArgsValidator = v.object({
 
 export const GenerateImageArgsValidator = v.object({
   prompt: v.string(),
+  seed: ImageFields.seed,
+  width: ImageFields.width,
+  height: ImageFields.height,
   projectId: ImageFields.projectId,
-  resolution: ImageFields.resolution,
   illustration: ImageFields.illustration,
   referenceImages: ImageFields.referenceImages,
 });

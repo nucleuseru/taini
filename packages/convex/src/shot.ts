@@ -20,11 +20,17 @@ export const UpdateShotArgsValidator = v.object({
   title: v.optional(ShotFields.title),
   order: v.optional(ShotFields.order),
   duration: v.optional(ShotFields.duration),
-  selectedFirstFrame: v.optional(ShotFields.selectedFirstFrame),
+  selectedEndFrame: v.optional(ShotFields.selectedEndFrame),
+  selectedStartFrame: v.optional(ShotFields.selectedStartFrame),
   selectedVideoClip: v.optional(ShotFields.selectedVideoClip),
 });
 
-export const AddShotFirstFramesArgsValidator = v.object({
+export const AddShotStartFramesArgsValidator = v.object({
+  id: v.id("shot"),
+  imageIds: v.array(v.id("image")),
+});
+
+export const AddShotEndFramesArgsValidator = v.object({
   id: v.id("shot"),
   imageIds: v.array(v.id("image")),
 });
@@ -56,7 +62,8 @@ export const createShotHandler = async (
 ) => {
   const shotId = await ctx.db.insert("shot", {
     ...options,
-    firstFrames: [],
+    startFrames: [],
+    endFrames: [],
     videoClips: [],
   });
 
@@ -71,16 +78,29 @@ export const updateShotHandler = async (
   await ctx.db.patch(id, fields);
 };
 
-export const addShotFirstFramesHandler = async (
+export const addShotStartFramesHandler = async (
   ctx: MutationCtx,
-  options: Infer<typeof AddShotFirstFramesArgsValidator>,
+  options: Infer<typeof AddShotStartFramesArgsValidator>,
 ) => {
   const shot = await ctx.db.get(options.id);
   if (!shot) throw new Error("Shot not found");
 
-  const firstFrames = shot.firstFrames ?? [];
+  const startFrames = shot.startFrames ?? [];
   await ctx.db.patch(options.id, {
-    firstFrames: [...firstFrames, ...options.imageIds],
+    startFrames: [...startFrames, ...options.imageIds],
+  });
+};
+
+export const addShotEndFramesHandler = async (
+  ctx: MutationCtx,
+  options: Infer<typeof AddShotEndFramesArgsValidator>,
+) => {
+  const shot = await ctx.db.get(options.id);
+  if (!shot) throw new Error("Shot not found");
+
+  const endFrames = shot.endFrames ?? [];
+  await ctx.db.patch(options.id, {
+    endFrames: [...endFrames, ...options.imageIds],
   });
 };
 
@@ -117,9 +137,14 @@ export const update = authMutation({
   handler: (ctx, args) => updateShotHandler(ctx, args),
 });
 
-export const addFirstFrames = authMutation({
-  args: AddShotFirstFramesArgsValidator,
-  handler: (ctx, args) => addShotFirstFramesHandler(ctx, args),
+export const addStartFrames = authMutation({
+  args: AddShotStartFramesArgsValidator,
+  handler: (ctx, args) => addShotStartFramesHandler(ctx, args),
+});
+
+export const addEndFrames = authMutation({
+  args: AddShotEndFramesArgsValidator,
+  handler: (ctx, args) => addShotEndFramesHandler(ctx, args),
 });
 
 export const addVideoClips = authMutation({

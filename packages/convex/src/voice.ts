@@ -14,7 +14,6 @@ export const ListVoiceArgsValidator = v.object({
 
 export const CloneVoiceArgsValidator = v.object({
   name: v.string(),
-  transcript: v.string(),
   referenceAudio: v.id("audio"),
   projectId: VoiceFields.projectId,
 });

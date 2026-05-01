@@ -10,21 +10,13 @@ export const ListEnvironmentArgsValidator = v.object({
 
 export const CreateEnvironmentArgsValidator = v.object({
   name: EnvironmentFields.name,
-  weather: EnvironmentFields.weather,
-  location: EnvironmentFields.location,
-  timeOfDay: EnvironmentFields.timeOfDay,
   projectId: EnvironmentFields.projectId,
-  atmosphere: EnvironmentFields.atmosphere,
   description: EnvironmentFields.description,
 });
 
 export const UpdateEnvironmentArgsValidator = v.object({
   id: v.id("environment"),
   name: v.optional(EnvironmentFields.name),
-  weather: v.optional(EnvironmentFields.weather),
-  location: v.optional(EnvironmentFields.location),
-  timeOfDay: v.optional(EnvironmentFields.timeOfDay),
-  atmosphere: v.optional(EnvironmentFields.atmosphere),
   description: v.optional(EnvironmentFields.description),
 });
 

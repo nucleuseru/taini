@@ -59,9 +59,8 @@ export const generateImagesTool = (
       images: z.array(
         z.object({
           prompt: z.string().describe("The prompt to generate the image"),
-          resolution: z
-            .enum(["1080p", "1920p"])
-            .describe("Vertical resolution"),
+          width: z.number().optional().describe("Image width"),
+          height: z.number().optional().describe("Image height"),
           illustration: z
             .boolean()
             .describe("Whether this is a character or an environment"),
@@ -143,9 +142,7 @@ export const generateAudiosTool = (
           referenceVoice: z
             .string()
             .describe("ID of the voice to use for Text-to-Speech"),
-          transcript: z
-            .string()
-            .describe("The text used to generate the audio"),
+          text: z.string().describe("The text used to generate the audio"),
         }),
       ),
     }),
@@ -352,12 +349,6 @@ export const createEnvironmentsTool = (
           description: z
             .string()
             .describe("General description of the environment"),
-          location: z.string().describe("Physical location or setting"),
-          timeOfDay: z
-            .string()
-            .describe("Specific time of day (e.g., 'Sunset')"),
-          weather: z.string().optional().describe("Weather conditions"),
-          atmosphere: z.string().describe("Emotional or visual mood"),
         }),
       ),
     }),
@@ -384,10 +375,6 @@ export const updateEnvironmentsTool = (ctx: RunMutationCtx) =>
           id: z.string().describe("The Convex ID of the environment to update"),
           name: z.string().optional().describe("The new name"),
           description: z.string().optional().describe("The new description"),
-          location: z.string().optional().describe("The new location"),
-          timeOfDay: z.string().optional().describe("The new time of day"),
-          weather: z.string().optional().describe("The new weather"),
-          atmosphere: z.string().optional().describe("The new atmosphere"),
         }),
       ),
     }),
@@ -577,10 +564,7 @@ export const createShotsTool = (ctx: RunMutationCtx) =>
           sceneId: z.string().describe("The Convex ID of the scene"),
           title: z.string().describe("The title or description of the shot"),
           order: z.number().describe("The sequential order of the shot"),
-          duration: z
-            .number()
-            .optional()
-            .describe("Intended duration in seconds"),
+          duration: z.number().describe("Intended duration in seconds"),
         }),
       ),
     }),
@@ -608,10 +592,14 @@ export const updateShotsTool = (ctx: RunMutationCtx) =>
           title: z.string().optional().describe("The new title"),
           order: z.number().optional().describe("The new sequential order"),
           duration: z.number().optional().describe("The new duration"),
-          selectedFirstFrame: z
+          selectedStartFrame: z
             .string()
             .optional()
-            .describe("ID of the selected first frame image"),
+            .describe("ID of the selected start frame image"),
+          selectedEndFrame: z
+            .string()
+            .optional()
+            .describe("ID of the selected end frame image"),
           selectedVideoClip: z
             .string()
             .optional()
@@ -626,9 +614,10 @@ export const updateShotsTool = (ctx: RunMutationCtx) =>
           ctx.runMutation(internal.agent.fn.updateShot, {
             ...shot,
             id: shot.id as Id<"shot">,
-            selectedFirstFrame: shot.selectedFirstFrame as
+            selectedStartFrame: shot.selectedStartFrame as
               | Id<"image">
               | undefined,
+            selectedEndFrame: shot.selectedEndFrame as Id<"image"> | undefined,
             selectedVideoClip: shot.selectedVideoClip as
               | Id<"video">
               | undefined,
@@ -639,10 +628,10 @@ export const updateShotsTool = (ctx: RunMutationCtx) =>
     },
   });
 
-export const addShotFirstFramesTool = (ctx: RunMutationCtx) =>
+export const addShotStartFramesTool = (ctx: RunMutationCtx) =>
   tool({
     description:
-      "Add multiple first frame variants (images) to one or more shots",
+      "Add multiple start frame variants (images) to one or more shots",
     inputSchema: z.object({
       shots: z.array(
         z.object({
@@ -655,7 +644,33 @@ export const addShotFirstFramesTool = (ctx: RunMutationCtx) =>
       await sleep(DELAY);
       const result = await Promise.all(
         shots.map((shot) =>
-          ctx.runMutation(internal.agent.fn.addShotFirstFrames, {
+          ctx.runMutation(internal.agent.fn.addShotStartFrames, {
+            id: shot.shotId as Id<"shot">,
+            imageIds: shot.images as Id<"image">[],
+          }),
+        ),
+      );
+      return result;
+    },
+  });
+
+export const addShotEndFramesTool = (ctx: RunMutationCtx) =>
+  tool({
+    description:
+      "Add multiple end frame variants (images) to one or more shots",
+    inputSchema: z.object({
+      shots: z.array(
+        z.object({
+          shotId: z.string().describe("The Convex ID of the shot"),
+          images: z.array(z.string()).describe("IDs of the image assets"),
+        }),
+      ),
+    }),
+    execute: async ({ shots }) => {
+      await sleep(DELAY);
+      const result = await Promise.all(
+        shots.map((shot) =>
+          ctx.runMutation(internal.agent.fn.addShotEndFrames, {
             id: shot.shotId as Id<"shot">,
             imageIds: shot.images as Id<"image">[],
           }),
@@ -740,16 +755,23 @@ export const generateVideosTool = (
       videos: z.array(
         z.object({
           prompt: z.string().describe("The prompt to generate the video"),
-          referenceImage: z
+          seed: z.number().optional().describe("Random seed for generation"),
+          width: z.number().optional().describe("Video width"),
+          height: z.number().optional().describe("Video height"),
+          duration: z.number().optional().describe("Intended duration"),
+          frameRate: z.enum(["24", "30", "60"]).describe("Video frame rate"),
+          startFrame: z
             .string()
             .optional()
             .describe("ID of an image asset to use as a starting frame"),
-          audio: z.boolean().describe("Whether to include/generate audio"),
-          duration: z.number().describe("Intended duration in seconds"),
-          resolution: z
-            .enum(["1080p", "1920p"])
-            .describe("Vertical resolution"),
-          frameRate: z.enum(["24", "30", "60"]).describe("Video frame rate"),
+          endFrame: z
+            .string()
+            .optional()
+            .describe("ID of an image asset to use as an ending frame"),
+          negativePrompt: z
+            .string()
+            .optional()
+            .describe("Negative prompt for generation"),
         }),
       ),
     }),
@@ -759,7 +781,8 @@ export const generateVideosTool = (
         videos.map((video) =>
           ctx.runMutation(internal.agent.fn.generateVideo, {
             ...video,
-            referenceImage: video.referenceImage as Id<"image"> | undefined,
+            startFrame: video.startFrame as Id<"image"> | undefined,
+            endFrame: video.endFrame as Id<"image"> | undefined,
             projectId,
           }),
         ),

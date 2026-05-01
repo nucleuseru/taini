@@ -70,7 +70,8 @@ export const createAgent = (
       listShots: tools.listShotsTool(ctx),
       createShots: tools.createShotsTool(ctx),
       // updateShots: tools.updateShotsTool(ctx),
-      addShotFirstFrames: tools.addShotFirstFramesTool(ctx),
+      addShotStartFrames: tools.addShotStartFramesTool(ctx),
+      addShotEndFrames: tools.addShotEndFramesTool(ctx),
       addShotVideoClips: tools.addShotVideoClipsTool(ctx),
 
       // Video

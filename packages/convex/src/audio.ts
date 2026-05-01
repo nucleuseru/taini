@@ -16,7 +16,7 @@ export const GenerateAudioArgsValidator = v.object({
   title: v.string(),
   referenceVoice: v.id("voice"),
   projectId: AudioFields.projectId,
-  transcript: AudioFields.transcript,
+  text: AudioFields.text,
 });
 
 export const UploadAudioArgsValidator = v.object({
@@ -60,7 +60,7 @@ export const generateAudioHandler = async (
 ) => {
   const audioId = await ctx.db.insert("audio", {
     ...options,
-    status: "pending",
+    ttsStatus: "pending",
   });
 
   return { audioId };
@@ -87,7 +87,7 @@ export const upload = authMutation({
     const audioId = await ctx.db.insert("audio", {
       ...args,
       uploaded: true,
-      transcriptionStatus: "pending",
+      sttStatus: "pending",
     });
 
     return { audioId };

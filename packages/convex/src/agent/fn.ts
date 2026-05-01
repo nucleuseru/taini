@@ -138,9 +138,14 @@ export const updateShot = internalMutation({
   handler: (ctx, args) => Shot.updateShotHandler(ctx, args),
 });
 
-export const addShotFirstFrames = internalMutation({
-  args: Shot.AddShotFirstFramesArgsValidator,
-  handler: (ctx, args) => Shot.addShotFirstFramesHandler(ctx, args),
+export const addShotStartFrames = internalMutation({
+  args: Shot.AddShotStartFramesArgsValidator,
+  handler: (ctx, args) => Shot.addShotStartFramesHandler(ctx, args),
+});
+
+export const addShotEndFrames = internalMutation({
+  args: Shot.AddShotEndFramesArgsValidator,
+  handler: (ctx, args) => Shot.addShotEndFramesHandler(ctx, args),
 });
 
 export const addShotVideoClips = internalMutation({
