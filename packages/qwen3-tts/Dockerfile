@@ -40,11 +40,15 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 RUN python - <<'PY'
 import torch
-from qwen_tts import Qwen3TTSModel
+from qwen_tts import Qwen3TTSModel, Qwen3TTSTokenizer
 Qwen3TTSModel.from_pretrained(
     "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
     device_map="cpu",
     dtype=torch.bfloat16,
+)
+Qwen3TTSTokenizer.from_pretrained(
+    "Qwen/Qwen3-TTS-Tokenizer-12Hz",
+    device_map="cpu",
 )
 PY
 
