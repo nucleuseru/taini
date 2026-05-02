@@ -4,8 +4,12 @@ import { Id } from "./_generated/dataModel";
 import { ActionCtx, internalAction } from "./_generated/server";
 import { createAgent } from "./agent/index";
 import {
-  CREATE_CHARACTERS_AND_ENVIRONMENTS_PROMPT,
-  CREATE_SHOTS_AND_SCENES_PROMPT,
+  CREATE_CHARACTER_ENVIRONMENT_ITEM_PROMPT,
+  CREATE_SHOT_SCENE_PROMPT,
+  CREATE_VOICEOVER_DIALOGUE_PROMPT,
+  IMAGE_PROMPTING_GUIDELINES,
+  SYSTEM_PROMPT,
+  VIDEO_PROMPTING_GUIDELINES,
 } from "./agent/prompts";
 import { authAction } from "./function";
 
@@ -53,76 +57,103 @@ const getThread = async (
   return thread;
 };
 
-export const createCharactersAndEnvironmentsInternal = internalAction({
+export const createVoiceOverDialogueInternal = internalAction({
   args: { userId: v.string(), projectId: v.id("project") },
   handler: async (ctx, args) => {
     const thread = await getThread(ctx, args.userId, args.projectId);
     await thread.generateText({
-      prompt: CREATE_CHARACTERS_AND_ENVIRONMENTS_PROMPT,
+      prompt: CREATE_VOICEOVER_DIALOGUE_PROMPT,
+      activeTools: ["listVoices", "listAudios", "generateAudios"],
+    });
+  },
+});
+
+export const createCharactersEnvironmentsItemsInternal = internalAction({
+  args: { userId: v.string(), projectId: v.id("project") },
+  handler: async (ctx, args) => {
+    const thread = await getThread(ctx, args.userId, args.projectId);
+    await thread.generateText({
+      prompt: CREATE_CHARACTER_ENVIRONMENT_ITEM_PROMPT,
+      system: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: IMAGE_PROMPTING_GUIDELINES },
+      ] as unknown as string,
       activeTools: [
+        "listItems",
         "listImages",
         "listCharacters",
         "listEnvironments",
-        "listItems",
+        "createItems",
         "generateImages",
         "createCharacters",
         "createEnvironments",
-        "createItems",
+        "addItemReferenceImages",
         "addCharacterReferenceImages",
         "addEnvironmentReferenceImages",
-        "addItemReferenceImages",
       ],
     });
   },
 });
 
-export const createShotsAndScenesInternal = internalAction({
+export const createShotsScenesInternal = internalAction({
   args: { userId: v.string(), projectId: v.id("project") },
   handler: async (ctx, args) => {
     const thread = await getThread(ctx, args.userId, args.projectId);
     await thread.generateText({
-      prompt: CREATE_SHOTS_AND_SCENES_PROMPT,
+      prompt: CREATE_SHOT_SCENE_PROMPT,
+      system: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: IMAGE_PROMPTING_GUIDELINES },
+        { role: "system", content: VIDEO_PROMPTING_GUIDELINES },
+      ] as unknown as string,
       activeTools: [
         "listShots",
         "listScenes",
         "listImages",
         "listVideos",
         "listAudios",
-        "listVoices",
+        "listItems",
         "listCharacters",
         "listEnvironments",
-        "listItems",
         "createShots",
         "createScenes",
         "generateImages",
         "generateVideos",
-        "generateAudios",
         "addShotVideoClips",
         "addShotStartFrames",
-        "addShotEndFrames",
       ],
     });
   },
 });
 
-export const createCharactersAndEnvironments = authAction({
+export const createVoiceOverDialogue = authAction({
   args: { projectId: v.id("project") },
   handler: async (ctx, args) => {
     await ctx.scheduler.runAfter(
       0,
-      internal.agent.createCharactersAndEnvironmentsInternal,
+      internal.agent.createVoiceOverDialogueInternal,
       { projectId: args.projectId, userId: ctx.user._id },
     );
   },
 });
 
-export const createShotsAndScenes = authAction({
+export const createCharactersEnvironmentsItems = authAction({
   args: { projectId: v.id("project") },
   handler: async (ctx, args) => {
     await ctx.scheduler.runAfter(
       0,
-      internal.agent.createShotsAndScenesInternal,
+      internal.agent.createCharactersEnvironmentsItemsInternal,
       { projectId: args.projectId, userId: ctx.user._id },
     );
+  },
+});
+
+export const createShotsScenes = authAction({
+  args: { projectId: v.id("project") },
+  handler: async (ctx, args) => {
+    await ctx.scheduler.runAfter(0, internal.agent.createShotsScenesInternal, {
+      projectId: args.projectId,
+      userId: ctx.user._id,
+    });
   },
 });

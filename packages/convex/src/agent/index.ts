@@ -9,6 +9,7 @@ import * as tools from "./tools";
 export const createAgent = (
   ctx: RunQueryCtx & RunMutationCtx,
   options: {
+    name?: string;
     style?: string;
     script: string;
     styleRef?: string;
@@ -20,7 +21,7 @@ export const createAgent = (
   const { projectId, storyboardId } = options;
 
   return new Agent(components.agent, {
-    name: "Author",
+    name: options.name ?? "FILM DIRECTOR",
     stopWhen: stepCountIs(200),
     instructions: SYSTEM_PROMPT,
     languageModel: google.chat("gemini-3.1-flash-lite-preview"),
