@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -10,48 +11,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Plus } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { createProject } from "./actions";
 
+const FormSchema = z.object({
+  name: z.string().min(1, "Project name is required"),
+});
+
 export function ProjectCreationDialog() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [open, setOpen] = useState(false);
-  const [isLoading, startTransition] = useTransition();
+  const form = useForm({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      name: "",
+    },
+  });
 
-  const handleSubmit = async () => {
-    if (!name.trim()) return;
-
-    try {
-      const result = await createProject(name);
-
-      if (!result.success) throw new Error(result.error);
-
-      const projectId = result.data.projectId;
-
-      toast.success("Project created successfully");
-
-      startTransition(() => {
-        setOpen(false);
-        setName("");
-      });
-
-      router.push(`/projects/${projectId}/storyboard`);
-    } catch (error: unknown) {
-      toast.error(
-        `Failed to create project: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-      console.error(error);
-    }
-  };
+  const onSubmit = form.handleSubmit(async (formData) => {
+    const error = await createProject(formData.name);
+    toast.error(error);
+  });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="lg" className="w-full">
           <Plus className="h-4 w-4" />
@@ -59,7 +46,7 @@ export function ProjectCreationDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <form>
+        <form onSubmit={(e) => void onSubmit(e)}>
           <DialogHeader>
             <DialogTitle>Create New Project</DialogTitle>
             <DialogDescription>
@@ -67,41 +54,42 @@ export function ProjectCreationDialog() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Field>
-              <FieldLabel htmlFor="name">Project Name</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="name"
-                  placeholder="e.g. My Awesome Sci-Fi Film"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                  }}
-                  autoFocus
-                />
-              </FieldContent>
-            </Field>
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
+                  <Input
+                    {...field}
+                    autoFocus
+                    type="text"
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder="e.g. My Awesome Sci-Fi Film"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setOpen(false);
-              }}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={isLoading || !name.trim()}
-              onClick={() => {
-                startTransition(async () => {
-                  await handleSubmit();
-                });
-              }}
-            >
-              {isLoading ? "Creating..." : "Create Project"}
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={form.formState.isSubmitting}
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              <span>Create Project</span>
             </Button>
           </DialogFooter>
         </form>
