@@ -1,8 +1,11 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { Doc } from "@repo/convex/dataModel";
+import { api } from "@repo/convex/api";
+import { Doc, Id } from "@repo/convex/dataModel";
+import { usePaginatedQuery } from "convex/react";
 import Image from "next/image";
+import { useParams } from "next/navigation";
 import { useState } from "react";
 import { MediaModal } from "./media-modal";
 
@@ -11,12 +14,38 @@ export type Media = { url?: string | null } & (
   | ({ type: "video" } & Doc<"video">)
 );
 
-export interface MediaFeedProps {
-  medias: Media[];
-}
-
-export function MediaFeed({ medias }: MediaFeedProps) {
+export function MediaFeed() {
+  const params = useParams();
+  const projectId = params.projectId as Id<"project">;
   const [selectedMedia, setSelectedMedia] = useState<Media | null>();
+
+  const images = usePaginatedQuery(
+    api.image.list,
+    { projectId },
+    { initialNumItems: 1024 },
+  );
+
+  const videos = usePaginatedQuery(
+    api.video.list,
+    { projectId },
+    { initialNumItems: 1024 },
+  );
+
+  const combinedMedias = [
+    ...images.results.map((img) => ({ ...img, type: "image" as const })),
+    ...videos.results.map((vid) => ({ ...vid, type: "video" as const })),
+  ];
+
+  const medias = combinedMedias.sort(
+    (a, b) => b._creationTime - a._creationTime,
+  );
+
+  if (
+    images.status === "LoadingFirstPage" ||
+    videos.status === "LoadingFirstPage"
+  ) {
+    return <MediaFeedSkeleton />;
+  }
 
   return (
     <>
@@ -29,9 +58,9 @@ export function MediaFeed({ medias }: MediaFeedProps) {
               setSelectedMedia(media);
             }}
           >
-            <Skeleton className="bg-card relative aspect-video">
-              {media.url &&
-                (media.type === "video" ? (
+            <div className="relative aspect-video bg-[#131313]">
+              {media.url ? (
+                media.type === "video" ? (
                   <video
                     playsInline
                     src={media.url}
@@ -47,8 +76,13 @@ export function MediaFeed({ medias }: MediaFeedProps) {
                     alt={media.prompt ?? "Generated image"}
                     className="h-full w-full object-cover"
                   />
-                ))}
-            </Skeleton>
+                )
+              ) : (
+                media.status === "generating" && (
+                  <Skeleton className="bg-card h-full w-full" />
+                )
+              )}
+            </div>
 
             <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
               <span className="rounded-sm border border-[#353534] bg-[#131313]/80 px-2 py-1 text-[10px] font-semibold tracking-wider text-[#e5e2e1] uppercase backdrop-blur-md">
@@ -68,5 +102,15 @@ export function MediaFeed({ medias }: MediaFeedProps) {
         />
       )}
     </>
+  );
+}
+
+export function MediaFeedSkeleton() {
+  return (
+    <div className="grid w-full grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 lg:px-8 xl:grid-cols-4">
+      {Array.from({ length: 10 }).map((_, i) => (
+        <Skeleton key={i} className="bg-card aspect-video" />
+      ))}
+    </div>
   );
 }

@@ -44,7 +44,9 @@ export function MediaModal({ media, onClose }: MediaModelProps) {
               />
             )
           ) : (
-            <Skeleton className="h-full w-full bg-[#0e0e0e]" />
+            media.status === "generating" && (
+              <Skeleton className="h-full w-full bg-[#0e0e0e]" />
+            )
           )}
         </div>
 
@@ -92,19 +94,17 @@ export function MediaModal({ media, onClose }: MediaModelProps) {
           </div>
 
           <div className="mt-auto flex flex-col gap-2">
-            <Button
-              asChild
-              variant="ghost"
-              disabled={!media.url}
-              className="justify-start gap-2 text-[#e5e2e1] hover:bg-[#2a2a2a] hover:text-[#efcb61]"
-            >
-              <a
-                href={media.url ?? "#"}
-                download={`${media.type}-${media._id}`}
+            {media.url && (
+              <Button
+                className="justify-start gap-2 text-[#e5e2e1] hover:bg-[#2a2a2a] hover:text-[#efcb61]"
+                variant="ghost"
+                asChild
               >
-                <span className="opacity-50">⬇️</span> Download
-              </a>
-            </Button>
+                <a href={media.url} download={`${media.type}-${media._id}`}>
+                  <span className="opacity-50">⬇️</span> Download
+                </a>
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
