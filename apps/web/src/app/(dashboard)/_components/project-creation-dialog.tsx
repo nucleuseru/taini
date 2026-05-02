@@ -18,7 +18,7 @@ import { Loader2, Plus } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { createProject } from "./actions";
+import { createProject } from "../actions";
 
 const FormSchema = z.object({
   name: z.string().min(1, "Project name is required"),

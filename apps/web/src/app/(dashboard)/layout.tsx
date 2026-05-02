@@ -1,12 +1,9 @@
 import { Navbar } from "@/components/navbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "./app-sidebar";
+import React from "react";
+import { AppSidebar } from "./_components/app-sidebar";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: React.PropsWithChildren) {
   return (
     <SidebarProvider>
       <Navbar />
