@@ -20,6 +20,7 @@ import type * as environment from "../environment.js";
 import type * as function_ from "../function.js";
 import type * as http from "../http.js";
 import type * as image from "../image.js";
+import type * as item from "../item.js";
 import type * as project from "../project.js";
 import type * as scene from "../scene.js";
 import type * as shot from "../shot.js";
@@ -50,6 +51,7 @@ const fullApi: ApiFromModules<{
   function: typeof function_;
   http: typeof http;
   image: typeof image;
+  item: typeof item;
   project: typeof project;
   scene: typeof scene;
   shot: typeof shot;

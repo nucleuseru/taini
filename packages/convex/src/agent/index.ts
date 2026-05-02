@@ -9,7 +9,9 @@ import * as tools from "./tools";
 export const createAgent = (
   ctx: RunQueryCtx & RunMutationCtx,
   options: {
+    style?: string;
     script: string;
+    styleRef?: string;
     projectName: string;
     projectId: Id<"project">;
     storyboardId: Id<"storyboard">;
@@ -26,6 +28,17 @@ export const createAgent = (
       return [
         { role: "user", content: `Project Name: ${options.projectName}` },
         { role: "user", content: `Film Script: ${options.script}` },
+        ...(options.style
+          ? [{ role: "user", content: `Film Style: ${options.style}` } as const]
+          : []),
+        ...(options.styleRef
+          ? [
+              {
+                role: "user",
+                content: `Style Reference Image ID: ${options.styleRef}`,
+              } as const,
+            ]
+          : []),
         ...args.search,
         ...args.recent,
         ...args.inputMessages,
@@ -35,52 +48,45 @@ export const createAgent = (
     },
     tools: {
       // Image
-      // getImagesById: tools.getImagesByIdTool(ctx),
       listImages: tools.listImagesTool(ctx, projectId),
-      generateImages: tools.generateImagesTool(ctx, projectId),
+      generateImages: tools.generateImagesTool(ctx, projectId, storyboardId),
 
       // Audio
-      // getAudiosById: tools.getAudiosByIdTool(ctx),
       listAudios: tools.listAudiosTool(ctx, projectId),
       generateAudios: tools.generateAudiosTool(ctx, projectId),
 
       // Character
-      // getCharactersById: tools.getCharactersByIdTool(ctx),
       listCharacters: tools.listCharactersTool(ctx, projectId),
       createCharacters: tools.createCharactersTool(ctx, projectId),
-      // updateCharacters: tools.updateCharactersTool(ctx),
       addCharacterReferenceImages: tools.addCharacterReferenceImagesTool(ctx),
 
       // Environment
-      // getEnvironmentsById: tools.getEnvironmentsByIdTool(ctx),
       listEnvironments: tools.listEnvironmentsTool(ctx, projectId),
       createEnvironments: tools.createEnvironmentsTool(ctx, projectId),
-      // updateEnvironments: tools.updateEnvironmentsTool(ctx),
       addEnvironmentReferenceImages:
         tools.addEnvironmentReferenceImagesTool(ctx),
 
+      // Item
+      listItems: tools.listItemsTool(ctx, projectId),
+      createItems: tools.createItemsTool(ctx, projectId),
+      addItemReferenceImages: tools.addItemReferenceImagesTool(ctx),
+
       // Scene
-      // getScenesById: tools.getScenesByIdTool(ctx),
       listScenes: tools.listScenesTool(ctx, storyboardId),
       createScenes: tools.createScenesTool(ctx, storyboardId),
-      // updateScenes: tools.updateScenesTool(ctx),
 
       // Shot
-      // getShotsById: tools.getShotsByIdTool(ctx),
       listShots: tools.listShotsTool(ctx),
       createShots: tools.createShotsTool(ctx),
-      // updateShots: tools.updateShotsTool(ctx),
       addShotStartFrames: tools.addShotStartFramesTool(ctx),
       addShotEndFrames: tools.addShotEndFramesTool(ctx),
       addShotVideoClips: tools.addShotVideoClipsTool(ctx),
 
       // Video
-      // getVideosById: tools.getVideosByIdTool(ctx),
       listVideos: tools.listVideosTool(ctx, projectId),
-      generateVideos: tools.generateVideosTool(ctx, projectId),
+      generateVideos: tools.generateVideosTool(ctx, projectId, storyboardId),
 
       // Voice
-      // getVoicesById: tools.getVoicesByIdTool(ctx),
       listVoices: tools.listVoicesTool(ctx, projectId),
     },
   });

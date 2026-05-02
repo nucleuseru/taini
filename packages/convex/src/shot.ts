@@ -13,6 +13,7 @@ export const CreateShotArgsValidator = v.object({
   order: ShotFields.order,
   sceneId: ShotFields.sceneId,
   duration: ShotFields.duration,
+  description: ShotFields.description,
 });
 
 export const UpdateShotArgsValidator = v.object({

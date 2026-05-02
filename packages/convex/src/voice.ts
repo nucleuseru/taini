@@ -1,10 +1,17 @@
 import { paginationOptsValidator } from "convex/server";
-import { Infer, v } from "convex/values";
+import { ConvexError, Infer, v } from "convex/values";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { QueryCtx } from "./_generated/server";
-import { authMutation, authQuery } from "./function";
+import {
+  httpAction,
+  internalAction,
+  internalQuery,
+  QueryCtx,
+} from "./_generated/server";
+import { authMutation, authQuery, internalMutation } from "./function";
 import { VoiceFields } from "./schema";
-import { sortOrderValidator } from "./utils";
+import { triggers } from "./triggers";
+import { RunPodData, sortOrderValidator } from "./utils";
 
 export const ListVoiceArgsValidator = v.object({
   projectId: VoiceFields.projectId,
@@ -85,4 +92,117 @@ export const upload = authMutation({
 
     return { voiceId };
   },
+});
+
+export const getByJobId = internalQuery({
+  args: { jobId: v.string() },
+  handler: (ctx, args) => {
+    return ctx.db
+      .query("voice")
+      .withIndex("by_job_id", (q) => q.eq("jobId", args.jobId))
+      .unique();
+  },
+});
+
+export const update = internalMutation({
+  args: {
+    id: v.id("voice"),
+    jobId: VoiceFields.jobId,
+    storageId: VoiceFields.storageId,
+    status: VoiceFields.status,
+  },
+  handler: (ctx, args) => {
+    const { id, ...rest } = args;
+    return ctx.db.patch(id, rest);
+  },
+});
+
+export const inference = internalAction({
+  args: {
+    id: v.id("voice"),
+    ref_text: v.string(),
+    ref_audio: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { id: voiceId, ...input } = args;
+
+    const response = await fetch(
+      "https://api.runpod.ai/v2/w6qbk3oyegwstr/run",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.RUNPOD_API_KEY ?? ""}`,
+        },
+        body: JSON.stringify({
+          input: { ...input, task: "create_prompt" },
+          webhook: `${process.env.CONVEX_SITE_URL ?? ""}/webhook/voice`,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new ConvexError(
+        `HTTP error! status: ${response.status.toString()}`,
+      );
+    }
+
+    const data = (await response.json()) as RunPodData;
+
+    await ctx.runMutation(internal.voice.update, {
+      id: voiceId,
+      jobId: data.id,
+      status: "generating",
+    });
+  },
+});
+
+export const webhook = httpAction(async (ctx, request) => {
+  const data = (await request.json()) as RunPodData<{
+    storage_ids: Id<"_storage">[];
+  }>;
+
+  const voice = await ctx.runQuery(internal.voice.getByJobId, {
+    jobId: data.id,
+  });
+
+  if (!voice) return new Response();
+
+  if (data.status === "COMPLETED") {
+    await ctx.runMutation(internal.voice.update, {
+      id: voice._id,
+      status: "completed",
+      storageId: data.output.storage_ids[0],
+    });
+  } else {
+    await ctx.runMutation(internal.voice.update, {
+      id: voice._id,
+      status: "failed",
+    });
+  }
+
+  return new Response();
+});
+
+triggers.register("voice", async (ctx, change) => {
+  if (change.operation !== "update") return;
+  if (change.newDoc.status !== "queued") return;
+
+  const audio = change.newDoc.referenceAudio
+    ? await ctx.db.get("audio", change.newDoc.referenceAudio)
+    : null;
+
+  const audioUrl = audio?.storageId
+    ? await ctx.storage.getUrl(audio.storageId)
+    : null;
+
+  if (audio?.text && audioUrl) {
+    await ctx.scheduler.runAfter(0, internal.voice.inference, {
+      id: change.id,
+      ref_text: audio.text,
+      ref_audio: audioUrl,
+    });
+  } else {
+    await ctx.db.patch(change.id, { status: "pending" });
+  }
 });

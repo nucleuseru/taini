@@ -38,15 +38,15 @@ export const CREATE_CHARACTERS_AND_ENVIRONMENTS_PROMPT = `
 You are responsible for extracting and establishing the visual canon of the film from the screenplay.
 
 Primary objective:
-Build the project’s canonical characters and environments with enough detail that every later shot, keyframe, and video generation remains visually consistent.
+Build the project’s canonical characters, environments, and items with enough detail that every later shot, keyframe, and video generation remains visually consistent.
 
 Operating rules:
 1. Read the script carefully and identify the stable entities that matter for continuity.
 2. Check the current project state first and only create new canonical entries when needed.
-3. Do not duplicate existing characters or environments.
+3. Do not duplicate existing characters, environments, or items.
 4. Capture the traits that are story-relevant and visually distinctive, not every possible description.
 5. Keep the canon precise but not overfitted. Establish identity anchors while leaving room for later shot-level variation.
-6. Treat each character and environment as a reusable reference standard for downstream scenes.
+6. Treat each character, environment, and item as a reusable reference standard for downstream scenes.
 7. Avoid flattening everything into generic descriptions. Preserve texture, personality, social context, age signals, silhouette, silhouette language, spatial logic, and mood.
 8. Do not lock the design to a single pose, angle, or lighting setup. Establish a reference identity, then allow varied but compatible visual expressions.
 9. Generate enough references to define the subject from multiple angles and conditions, but keep them consistent with the same underlying identity.
@@ -62,6 +62,11 @@ Environment direction:
 - Capture spatial logic so later shots can be staged accurately.
 - Include variation in viewpoint and distance while preserving the same location identity.
 
+Item/Prop direction:
+- Define identity, material, scale, branding, and recurring markings for key story-relevant items.
+- Ensure props have a stable visual reference so they maintain continuity across multiple shots and scenes.
+- Allow for different angles and conditions while preserving the item's core identity.
+
 Quality bar:
 - The result should function as the canonical visual source for the rest of the pipeline.
 - Favor clarity, reproducibility, and narrative usefulness over decorative excess.
@@ -74,7 +79,7 @@ Primary objective:
 Translate the script into scene structure, shot structure, keyframes, and video-ready motion while preserving character and environment continuity.
 
 Operating rules:
-1. Start from the screenplay and the existing canonical characters and environments.
+1. Start from the screenplay and the existing canonical characters, environments, and items.
 2. Verify what already exists in the project before creating new scenes or shots.
 3. Avoid duplicating scenes or shots unless the script explicitly calls for parallelism, repetition, or montage.
 4. Use the canonical visual identities as anchors for every frame, keyframe, and video segment.

@@ -1,10 +1,18 @@
 import { paginationOptsValidator } from "convex/server";
-import { Infer, v } from "convex/values";
+import { ConvexError, Infer, v } from "convex/values";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { MutationCtx, QueryCtx } from "./_generated/server";
-import { authMutation, authQuery } from "./function";
+import {
+  httpAction,
+  internalAction,
+  internalQuery,
+  MutationCtx,
+  QueryCtx,
+} from "./_generated/server";
+import { authMutation, authQuery, internalMutation } from "./function";
 import { VideoFields } from "./schema";
-import { sortOrderValidator } from "./utils";
+import { triggers } from "./triggers";
+import { generateRandomInt, RunPodData, sortOrderValidator } from "./utils";
 
 export const ListVideoArgsValidator = v.object({
   projectId: VideoFields.projectId,
@@ -14,7 +22,6 @@ export const ListVideoArgsValidator = v.object({
 
 export const GenerateVideoArgsValidator = v.object({
   prompt: v.string(),
-  seed: VideoFields.seed,
   width: VideoFields.width,
   height: VideoFields.height,
   duration: VideoFields.duration,
@@ -66,6 +73,7 @@ export const generateVideoHandler = async (
   const videoId = await ctx.db.insert("video", {
     ...options,
     status: "pending",
+    seed: generateRandomInt(4_000_000_000),
   });
 
   return { videoId };
@@ -92,4 +100,145 @@ export const upload = authMutation({
     const videoId = await ctx.db.insert("video", { ...args, uploaded: true });
     return { videoId };
   },
+});
+
+export const triggerInference = authMutation({
+  args: { id: v.id("video") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { status: "queued" });
+  },
+});
+
+export const getByJobId = internalQuery({
+  args: { jobId: v.string() },
+  handler: (ctx, args) => {
+    return ctx.db
+      .query("video")
+      .withIndex("by_job_id", (q) => q.eq("jobId", args.jobId))
+      .unique();
+  },
+});
+
+export const update = internalMutation({
+  args: {
+    id: v.id("video"),
+    jobId: VideoFields.jobId,
+    storageId: VideoFields.storageId,
+    status: VideoFields.status,
+  },
+  handler: (ctx, args) => {
+    const { id, ...rest } = args;
+    return ctx.db.patch(id, rest);
+  },
+});
+
+export const inference = internalAction({
+  args: {
+    id: v.id("video"),
+    prompt: v.string(),
+    seed: v.optional(v.number()),
+    width: v.optional(v.number()),
+    height: v.optional(v.number()),
+    duration: v.optional(v.number()),
+    start_frame: v.optional(v.string()),
+    end_frame: v.optional(v.string()),
+    negative_prompt: v.optional(v.string()),
+    frame_rate: v.optional(VideoFields.frameRate),
+  },
+  handler: async (ctx, args) => {
+    const { id: videoId, ...input } = args;
+
+    const response = await fetch(
+      "https://api.runpod.ai/v2/y4k7x6m6ur4v51/run",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.RUNPOD_API_KEY ?? ""}`,
+        },
+        body: JSON.stringify({
+          input,
+          webhook: `${process.env.CONVEX_SITE_URL ?? ""}/webhook/video`,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new ConvexError(
+        `HTTP error! status: ${response.status.toString()}`,
+      );
+    }
+
+    const data = (await response.json()) as RunPodData;
+
+    await ctx.runMutation(internal.video.update, {
+      id: videoId,
+      jobId: data.id,
+      status: "generating",
+    });
+  },
+});
+
+export const webhook = httpAction(async (ctx, request) => {
+  const data = (await request.json()) as RunPodData<{
+    storage_id: Id<"_storage">;
+  }>;
+
+  const video = await ctx.runQuery(internal.video.getByJobId, {
+    jobId: data.id,
+  });
+
+  if (!video) return new Response();
+
+  if (data.status === "COMPLETED") {
+    await ctx.runMutation(internal.video.update, {
+      id: video._id,
+      status: "completed",
+      storageId: data.output.storage_id,
+    });
+  } else {
+    await ctx.runMutation(internal.video.update, {
+      id: video._id,
+      status: "failed",
+    });
+  }
+
+  return new Response();
+});
+
+triggers.register("video", async (ctx, change) => {
+  if (change.operation !== "update") return;
+  if (change.newDoc.status !== "queued") return;
+
+  if (!change.newDoc.prompt?.trim()) {
+    await ctx.db.patch(change.id, { status: "pending" });
+    return;
+  }
+
+  const startFrameUrl = change.newDoc.startFrame
+    ? await ctx.storage.getUrl(
+        (await ctx.db.get("image", change.newDoc.startFrame))?.storageId ??
+          ("" as Id<"_storage">),
+      )
+    : undefined;
+
+  const endFrameUrl = change.newDoc.endFrame
+    ? await ctx.storage.getUrl(
+        (await ctx.db.get("image", change.newDoc.endFrame))?.storageId ??
+          ("" as Id<"_storage">),
+      )
+    : undefined;
+
+  await ctx.scheduler.runAfter(0, internal.video.inference, {
+    id: change.id,
+    prompt: change.newDoc.prompt,
+    seed: change.newDoc.seed ?? undefined,
+    width: change.newDoc.width ?? undefined,
+    height: change.newDoc.height ?? undefined,
+    duration: change.newDoc.duration ?? undefined,
+    frame_rate: change.newDoc.frameRate ?? undefined,
+    start_frame: startFrameUrl ?? undefined,
+    end_frame: endFrameUrl ?? undefined,
+    negative_prompt: change.newDoc.negativePrompt ?? undefined,
+  });
 });

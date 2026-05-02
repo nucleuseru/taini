@@ -1,12 +1,18 @@
-import { process } from "better-auth";
 import { paginationOptsValidator } from "convex/server";
-import { Infer, v } from "convex/values";
+import { ConvexError, Infer, v } from "convex/values";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { internalAction, MutationCtx, QueryCtx } from "./_generated/server";
-import { authMutation, authQuery } from "./function";
+import {
+  httpAction,
+  internalAction,
+  internalQuery,
+  MutationCtx,
+  QueryCtx,
+} from "./_generated/server";
+import { authMutation, authQuery, internalMutation } from "./function";
 import { ImageFields } from "./schema";
 import { triggers } from "./triggers";
-import { sortOrderValidator } from "./utils";
+import { generateRandomInt, RunPodData, sortOrderValidator } from "./utils";
 
 export const ListImageArgsValidator = v.object({
   projectId: ImageFields.projectId,
@@ -16,7 +22,6 @@ export const ListImageArgsValidator = v.object({
 
 export const GenerateImageArgsValidator = v.object({
   prompt: v.string(),
-  seed: ImageFields.seed,
   width: ImageFields.width,
   height: ImageFields.height,
   projectId: ImageFields.projectId,
@@ -66,6 +71,7 @@ export const generateImageHandler = async (
   const imageId = await ctx.db.insert("image", {
     ...options,
     status: "pending",
+    seed: generateRandomInt(4_000_000_000),
   });
 
   return { imageId };
@@ -94,8 +100,39 @@ export const upload = authMutation({
   },
 });
 
+export const triggerInference = authMutation({
+  args: { id: v.id("image") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { status: "queued" });
+  },
+});
+
+export const getByJobId = internalQuery({
+  args: { jobId: v.string() },
+  handler: (ctx, args) => {
+    return ctx.db
+      .query("image")
+      .withIndex("by_job_id", (q) => q.eq("jobId", args.jobId))
+      .unique();
+  },
+});
+
+export const update = internalMutation({
+  args: {
+    id: v.id("image"),
+    jobId: ImageFields.jobId,
+    storageId: ImageFields.storageId,
+    status: ImageFields.status,
+  },
+  handler: (ctx, args) => {
+    const { id, ...rest } = args;
+    return ctx.db.patch(id, rest);
+  },
+});
+
 export const inference = internalAction({
   args: {
+    id: v.id("image"),
     prompt: v.string(),
     seed: v.optional(v.number()),
     width: v.optional(v.number()),
@@ -103,35 +140,92 @@ export const inference = internalAction({
     input_images: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const endpoint = "https://api.runpod.ai/v2/6cqbgvah21o4vh/run";
+    const { id: imageId, ...input } = args;
 
-    const requestConfig = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.RUNPOD_API_KEY}`,
+    const response = await fetch(
+      "https://api.runpod.ai/v2/6cqbgvah21o4vh/run",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.RUNPOD_API_KEY ?? ""}`,
+        },
+        body: JSON.stringify({
+          input,
+          webhook: `${process.env.CONVEX_SITE_URL ?? ""}/webhook/image`,
+        }),
       },
-      body: JSON.stringify({ input: args }),
-    };
+    );
 
-    try {
-      const response = await fetch(endpoint, requestConfig);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log(data);
-      return data;
-    } catch (error) {
-      console.error("Error:", error);
-      throw error;
+    if (!response.ok) {
+      throw new ConvexError(
+        `HTTP error! status: ${response.status.toString()}`,
+      );
     }
+
+    const data = (await response.json()) as RunPodData;
+
+    await ctx.runMutation(internal.image.update, {
+      id: imageId,
+      jobId: data.id,
+      status: "generating",
+    });
   },
+});
+
+export const webhook = httpAction(async (ctx, request) => {
+  const data = (await request.json()) as RunPodData<{
+    storage_ids: Id<"_storage">[];
+  }>;
+
+  const image = await ctx.runQuery(internal.image.getByJobId, {
+    jobId: data.id,
+  });
+
+  if (!image) return new Response();
+
+  if (data.status === "COMPLETED") {
+    await ctx.runMutation(internal.image.update, {
+      id: image._id,
+      status: "completed",
+      storageId: data.output.storage_ids[0],
+    });
+  } else {
+    await ctx.runMutation(internal.image.update, {
+      id: image._id,
+      status: "failed",
+    });
+  }
+
+  return new Response();
 });
 
 triggers.register("image", async (ctx, change) => {
   if (change.operation !== "update") return;
   if (change.newDoc.status !== "queued") return;
+
+  if (!change.newDoc.prompt?.trim()) {
+    await ctx.db.patch(change.id, { status: "pending" });
+    return;
+  }
+
+  const input_images = await Promise.all(
+    change.newDoc.referenceImages?.map(async (imageId) => {
+      const image = await getImageByIdHandler(ctx, imageId);
+
+      if (image?.storageId) {
+        const imageUrl = await ctx.storage.getUrl(image.storageId);
+        return imageUrl;
+      }
+    }) ?? [],
+  );
+
+  await ctx.scheduler.runAfter(0, internal.image.inference, {
+    id: change.id,
+    prompt: change.newDoc.prompt,
+    seed: change.newDoc.seed ?? undefined,
+    width: change.newDoc.width ?? undefined,
+    height: change.newDoc.height ?? undefined,
+    input_images: input_images.filter((img): img is string => !!img),
+  });
 });

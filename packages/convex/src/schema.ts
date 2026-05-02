@@ -95,7 +95,7 @@ export const ItemFields = {
   referenceImages: v.array(
     v.object({
       name: v.string(),
-      description: v.string(),
+      description: optional(v.string()),
       imageId: v.id("image"),
     }),
   ),
@@ -108,7 +108,7 @@ export const EnvironmentFields = {
   referenceImages: v.array(
     v.object({
       name: v.string(),
-      description: v.string(),
+      description: optional(v.string()),
       imageId: v.id("image"),
     }),
   ),
@@ -117,6 +117,7 @@ export const EnvironmentFields = {
 export const ShotFields = {
   sceneId: v.id("scene"),
   title: v.string(),
+  description: v.string(),
   order: v.number(),
   duration: v.number(),
   startFrames: optional(v.array(v.id("image"))),
@@ -131,6 +132,7 @@ export const SceneFields = {
   storyboardId: v.id("storyboard"),
   order: v.number(),
   title: v.string(),
+  description: v.string(),
 };
 
 export const StoryboardFields = {

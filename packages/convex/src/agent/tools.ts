@@ -8,26 +8,6 @@ export const DELAY = 10000;
 
 // --- Image Tools ---
 
-export const getImagesByIdTool = (ctx: RunQueryCtx) =>
-  tool({
-    description: "Get one or more images by their IDs",
-    inputSchema: z.object({
-      ids: z.array(z.string().describe("The Convex ID of the image")),
-    }),
-    execute: async ({ ids }) => {
-      await sleep(DELAY);
-      const results = await Promise.all(
-        ids.map((id) =>
-          ctx.runQuery(internal.agent.fn.getImageById, {
-            id: id as Id<"image">,
-          }),
-        ),
-      );
-
-      return results.filter((r) => r !== null);
-    },
-  });
-
 export const listImagesTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({
     description: "List images in a project",
@@ -51,6 +31,7 @@ export const listImagesTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
 export const generateImagesTool = (
   ctx: RunMutationCtx,
   projectId: Id<"project">,
+  storyboardId: Id<"storyboard">,
 ) =>
   tool({
     description:
@@ -59,8 +40,6 @@ export const generateImagesTool = (
       images: z.array(
         z.object({
           prompt: z.string().describe("The prompt to generate the image"),
-          width: z.number().optional().describe("Image width"),
-          height: z.number().optional().describe("Image height"),
           illustration: z
             .boolean()
             .describe("Whether this is a character or an environment"),
@@ -79,6 +58,7 @@ export const generateImagesTool = (
             ...image,
             referenceImages: image.referenceImages as Id<"image">[] | undefined,
             projectId,
+            storyboardId,
           }),
         ),
       );
@@ -88,26 +68,6 @@ export const generateImagesTool = (
   });
 
 // --- Audio Tools ---
-
-export const getAudiosByIdTool = (ctx: RunQueryCtx) =>
-  tool({
-    description: "Get one or more audio assets by their IDs",
-    inputSchema: z.object({
-      ids: z.array(z.string().describe("The Convex ID of the audio asset")),
-    }),
-    execute: async ({ ids }) => {
-      await sleep(DELAY);
-      const results = await Promise.all(
-        ids.map((id) =>
-          ctx.runQuery(internal.agent.fn.getAudioById, {
-            id: id as Id<"audio">,
-          }),
-        ),
-      );
-
-      return results.filter((r) => r !== null);
-    },
-  });
 
 export const listAudiosTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({
@@ -163,25 +123,6 @@ export const generateAudiosTool = (
 
 // --- Character Tools ---
 
-export const getCharactersByIdTool = (ctx: RunQueryCtx) =>
-  tool({
-    description: "Get one or more characters' details by their IDs",
-    inputSchema: z.object({
-      ids: z.array(z.string().describe("The Convex ID of the character")),
-    }),
-    execute: async ({ ids }) => {
-      await sleep(DELAY);
-      const results = await Promise.all(
-        ids.map((id) =>
-          ctx.runQuery(internal.agent.fn.getCharacterById, {
-            id: id as Id<"character">,
-          }),
-        ),
-      );
-      return results.filter((r) => r !== null);
-    },
-  });
-
 export const listCharactersTool = (
   ctx: RunQueryCtx,
   projectId: Id<"project">,
@@ -233,35 +174,6 @@ export const createCharactersTool = (
     },
   });
 
-export const updateCharactersTool = (ctx: RunMutationCtx) =>
-  tool({
-    description: "Update multiple existing characters' fields",
-    inputSchema: z.object({
-      characters: z.array(
-        z.object({
-          id: z.string().describe("The Convex ID of the character to update"),
-          name: z.string().optional().describe("The new name"),
-          description: z.string().optional().describe("The new description"),
-          personality: z.string().optional().describe("The new personality"),
-          appearance: z.string().optional().describe("The new appearance"),
-          age: z.string().optional().describe("The new age"),
-        }),
-      ),
-    }),
-    execute: async ({ characters }) => {
-      await sleep(DELAY);
-      const result = await Promise.all(
-        characters.map((character) =>
-          ctx.runMutation(internal.agent.fn.updateCharacter, {
-            ...character,
-            id: character.id as Id<"character">,
-          }),
-        ),
-      );
-      return result;
-    },
-  });
-
 export const addCharacterReferenceImagesTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Add multiple reference images to one or more characters",
@@ -300,25 +212,6 @@ export const addCharacterReferenceImagesTool = (ctx: RunMutationCtx) =>
   });
 
 // --- Environment Tools ---
-
-export const getEnvironmentsByIdTool = (ctx: RunQueryCtx) =>
-  tool({
-    description: "Get one or more environments' details by their IDs",
-    inputSchema: z.object({
-      ids: z.array(z.string().describe("The Convex ID of the environment")),
-    }),
-    execute: async ({ ids }) => {
-      await sleep(DELAY);
-      const results = await Promise.all(
-        ids.map((id) =>
-          ctx.runQuery(internal.agent.fn.getEnvironmentById, {
-            id: id as Id<"environment">,
-          }),
-        ),
-      );
-      return results.filter((r) => r !== null);
-    },
-  });
 
 export const listEnvironmentsTool = (
   ctx: RunQueryCtx,
@@ -366,32 +259,6 @@ export const createEnvironmentsTool = (
     },
   });
 
-export const updateEnvironmentsTool = (ctx: RunMutationCtx) =>
-  tool({
-    description: "Update multiple existing environments' fields",
-    inputSchema: z.object({
-      environments: z.array(
-        z.object({
-          id: z.string().describe("The Convex ID of the environment to update"),
-          name: z.string().optional().describe("The new name"),
-          description: z.string().optional().describe("The new description"),
-        }),
-      ),
-    }),
-    execute: async ({ environments }) => {
-      await sleep(DELAY);
-      const result = await Promise.all(
-        environments.map((env) =>
-          ctx.runMutation(internal.agent.fn.updateEnvironment, {
-            ...env,
-            id: env.id as Id<"environment">,
-          }),
-        ),
-      );
-      return result;
-    },
-  });
-
 export const addEnvironmentReferenceImagesTool = (ctx: RunMutationCtx) =>
   tool({
     description: "Add multiple reference images to one or more environments",
@@ -406,6 +273,7 @@ export const addEnvironmentReferenceImagesTool = (ctx: RunMutationCtx) =>
               name: z.string().describe("Label for the reference image"),
               description: z
                 .string()
+                .optional()
                 .describe("Description of what this image shows"),
               imageId: z.string().describe("ID of the image asset"),
             }),
@@ -430,26 +298,87 @@ export const addEnvironmentReferenceImagesTool = (ctx: RunMutationCtx) =>
     },
   });
 
-// --- Scene Tools ---
+// --- Item Tools ---
 
-export const getScenesByIdTool = (ctx: RunQueryCtx) =>
+export const listItemsTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({
-    description: "Get one or more scenes' details by their IDs",
-    inputSchema: z.object({
-      ids: z.array(z.string().describe("The Convex ID of the scene")),
-    }),
-    execute: async ({ ids }) => {
+    description: "List all items in a project",
+    inputSchema: z.object({}),
+    execute: async () => {
       await sleep(DELAY);
-      const results = await Promise.all(
-        ids.map((id) =>
-          ctx.runQuery(internal.agent.fn.getSceneById, {
-            id: id as Id<"scene">,
+      const result = await ctx.runQuery(internal.agent.fn.listItems, {
+        projectId,
+      });
+      return result;
+    },
+  });
+
+export const createItemsTool = (
+  ctx: RunMutationCtx,
+  projectId: Id<"project">,
+) =>
+  tool({
+    description: "Create one or more new items (props) in a project",
+    inputSchema: z.object({
+      items: z.array(
+        z.object({
+          name: z.string().describe("The name of the item"),
+          description: z.string().describe("General description of the item"),
+        }),
+      ),
+    }),
+    execute: async ({ items }) => {
+      await sleep(DELAY);
+      const result = await Promise.all(
+        items.map((item) =>
+          ctx.runMutation(internal.agent.fn.createItem, {
+            ...item,
+            projectId,
           }),
         ),
       );
-      return results.filter((r) => r !== null);
+      return result;
     },
   });
+
+export const addItemReferenceImagesTool = (ctx: RunMutationCtx) =>
+  tool({
+    description: "Add multiple reference images to one or more items",
+    inputSchema: z.object({
+      references: z.array(
+        z.object({
+          itemId: z.string().describe("The Convex ID of the item"),
+          images: z.array(
+            z.object({
+              name: z.string().describe("Label for the reference image"),
+              description: z
+                .string()
+                .optional()
+                .describe("Description of what this image shows"),
+              imageId: z.string().describe("ID of the image asset"),
+            }),
+          ),
+        }),
+      ),
+    }),
+    execute: async ({ references }) => {
+      await sleep(DELAY);
+      const result = await Promise.all(
+        references.map((ref) =>
+          ctx.runMutation(internal.agent.fn.addItemReferenceImages, {
+            id: ref.itemId as Id<"item">,
+            images: ref.images.map((img) => ({
+              ...img,
+              imageId: img.imageId as Id<"image">,
+            })),
+          }),
+        ),
+      );
+      return result;
+    },
+  });
+
+// --- Scene Tools ---
 
 export const listScenesTool = (
   ctx: RunQueryCtx,
@@ -478,6 +407,7 @@ export const createScenesTool = (
         z.object({
           order: z.number().describe("The sequential order of the scene"),
           title: z.string().describe("The title or slug for the scene"),
+          description: z.string().describe("The description of the scene"),
         }),
       ),
     }),
@@ -495,50 +425,7 @@ export const createScenesTool = (
     },
   });
 
-export const updateScenesTool = (ctx: RunMutationCtx) =>
-  tool({
-    description: "Update multiple existing scenes' fields",
-    inputSchema: z.object({
-      scenes: z.array(
-        z.object({
-          id: z.string().describe("The Convex ID of the scene to update"),
-          order: z.number().optional().describe("The new sequential order"),
-          title: z.string().optional().describe("The new title"),
-        }),
-      ),
-    }),
-    execute: async ({ scenes }) => {
-      await sleep(DELAY);
-      const result = await Promise.all(
-        scenes.map((scene) =>
-          ctx.runMutation(internal.agent.fn.updateScene, {
-            ...scene,
-            id: scene.id as Id<"scene">,
-          }),
-        ),
-      );
-      return result;
-    },
-  });
-
 // --- Shot Tools ---
-
-export const getShotsByIdTool = (ctx: RunQueryCtx) =>
-  tool({
-    description: "Get one or more shots' details by their IDs",
-    inputSchema: z.object({
-      ids: z.array(z.string().describe("The Convex ID of the shot")),
-    }),
-    execute: async ({ ids }) => {
-      await sleep(DELAY);
-      const results = await Promise.all(
-        ids.map((id) =>
-          ctx.runQuery(internal.agent.fn.getShotById, { id: id as Id<"shot"> }),
-        ),
-      );
-      return results.filter((r) => r !== null);
-    },
-  });
 
 export const listShotsTool = (ctx: RunQueryCtx) =>
   tool({
@@ -565,6 +452,7 @@ export const createShotsTool = (ctx: RunMutationCtx) =>
           title: z.string().describe("The title or description of the shot"),
           order: z.number().describe("The sequential order of the shot"),
           duration: z.number().describe("Intended duration in seconds"),
+          description: z.string().describe("Description of the shot"),
         }),
       ),
     }),
@@ -575,52 +463,6 @@ export const createShotsTool = (ctx: RunMutationCtx) =>
           ctx.runMutation(internal.agent.fn.createShot, {
             ...shot,
             sceneId: shot.sceneId as Id<"scene">,
-          }),
-        ),
-      );
-      return result;
-    },
-  });
-
-export const updateShotsTool = (ctx: RunMutationCtx) =>
-  tool({
-    description: "Update multiple existing shots' fields",
-    inputSchema: z.object({
-      shots: z.array(
-        z.object({
-          id: z.string().describe("The Convex ID of the shot to update"),
-          title: z.string().optional().describe("The new title"),
-          order: z.number().optional().describe("The new sequential order"),
-          duration: z.number().optional().describe("The new duration"),
-          selectedStartFrame: z
-            .string()
-            .optional()
-            .describe("ID of the selected start frame image"),
-          selectedEndFrame: z
-            .string()
-            .optional()
-            .describe("ID of the selected end frame image"),
-          selectedVideoClip: z
-            .string()
-            .optional()
-            .describe("ID of the selected video clip"),
-        }),
-      ),
-    }),
-    execute: async ({ shots }) => {
-      await sleep(DELAY);
-      const result = await Promise.all(
-        shots.map((shot) =>
-          ctx.runMutation(internal.agent.fn.updateShot, {
-            ...shot,
-            id: shot.id as Id<"shot">,
-            selectedStartFrame: shot.selectedStartFrame as
-              | Id<"image">
-              | undefined,
-            selectedEndFrame: shot.selectedEndFrame as Id<"image"> | undefined,
-            selectedVideoClip: shot.selectedVideoClip as
-              | Id<"video">
-              | undefined,
           }),
         ),
       );
@@ -707,25 +549,6 @@ export const addShotVideoClipsTool = (ctx: RunMutationCtx) =>
 
 // --- Video Tools ---
 
-export const getVideosByIdTool = (ctx: RunQueryCtx) =>
-  tool({
-    description: "Get one or more videos' details by their IDs",
-    inputSchema: z.object({
-      ids: z.array(z.string().describe("The Convex ID of the video")),
-    }),
-    execute: async ({ ids }) => {
-      await sleep(DELAY);
-      const results = await Promise.all(
-        ids.map((id) =>
-          ctx.runQuery(internal.agent.fn.getVideoById, {
-            id: id as Id<"video">,
-          }),
-        ),
-      );
-      return results.filter((r) => r !== null);
-    },
-  });
-
 export const listVideosTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({
     description: "List all videos in a project",
@@ -748,6 +571,7 @@ export const listVideosTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
 export const generateVideosTool = (
   ctx: RunMutationCtx,
   projectId: Id<"project">,
+  storyboardId: Id<"storyboard">,
 ) =>
   tool({
     description: "Generate one or more new video clips based on prompts",
@@ -756,10 +580,7 @@ export const generateVideosTool = (
         z.object({
           prompt: z.string().describe("The prompt to generate the video"),
           seed: z.number().optional().describe("Random seed for generation"),
-          width: z.number().optional().describe("Video width"),
-          height: z.number().optional().describe("Video height"),
           duration: z.number().optional().describe("Intended duration"),
-          frameRate: z.enum(["24", "30", "60"]).describe("Video frame rate"),
           startFrame: z
             .string()
             .optional()
@@ -784,6 +605,7 @@ export const generateVideosTool = (
             startFrame: video.startFrame as Id<"image"> | undefined,
             endFrame: video.endFrame as Id<"image"> | undefined,
             projectId,
+            storyboardId,
           }),
         ),
       );
@@ -792,25 +614,6 @@ export const generateVideosTool = (
   });
 
 // --- Voice Tools ---
-
-export const getVoicesByIdTool = (ctx: RunQueryCtx) =>
-  tool({
-    description: "Get one or more voices' details by their IDs",
-    inputSchema: z.object({
-      ids: z.array(z.string().describe("The Convex ID of the voice")),
-    }),
-    execute: async ({ ids }) => {
-      await sleep(DELAY);
-      const results = await Promise.all(
-        ids.map((id) =>
-          ctx.runQuery(internal.agent.fn.getVoiceById, {
-            id: id as Id<"voice">,
-          }),
-        ),
-      );
-      return results.filter((r) => r !== null);
-    },
-  });
 
 export const listVoicesTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
   tool({

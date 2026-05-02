@@ -12,6 +12,7 @@ export const CreateSceneArgsValidator = v.object({
   storyboardId: SceneFields.storyboardId,
   order: SceneFields.order,
   title: SceneFields.title,
+  description: SceneFields.description,
 });
 
 export const UpdateSceneArgsValidator = v.object({

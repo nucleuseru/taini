@@ -32,6 +32,8 @@ const getThread = async (
     script: storyboard.script,
     projectName: project.name,
     storyboardId: storyboard._id,
+    style: storyboard.style ?? undefined,
+    styleRef: storyboard.referenceStyle ?? undefined,
   });
 
   const { thread } = !storyboard.threadId
@@ -61,11 +63,14 @@ export const createCharactersAndEnvironmentsInternal = internalAction({
         "listImages",
         "listCharacters",
         "listEnvironments",
+        "listItems",
         "generateImages",
         "createCharacters",
         "createEnvironments",
+        "createItems",
         "addCharacterReferenceImages",
         "addEnvironmentReferenceImages",
+        "addItemReferenceImages",
       ],
     });
   },
@@ -86,13 +91,15 @@ export const createShotsAndScenesInternal = internalAction({
         "listVoices",
         "listCharacters",
         "listEnvironments",
+        "listItems",
         "createShots",
         "createScenes",
         "generateImages",
         "generateVideos",
         "generateAudios",
         "addShotVideoClips",
-        "addShotFirstFrames",
+        "addShotStartFrames",
+        "addShotEndFrames",
       ],
     });
   },

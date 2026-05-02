@@ -9,6 +9,10 @@ export const sleep = (delay: number) => {
   return new Promise((resolve) => setTimeout(resolve, delay));
 };
 
+export const generateRandomInt = (max: number, min = 0) => {
+  return Math.floor(Math.random() * (max - min));
+};
+
 export const generationStatusValidator = v.union(
   v.literal("pending"),
   v.literal("queued"),
@@ -29,4 +33,11 @@ export interface RunMutationCtx {
 
 export interface RunActionCtx {
   runAction: ActionCtx["runAction"];
+}
+
+export interface RunPodData<T = undefined> {
+  id: string;
+  output: T;
+  error?: unknown;
+  status: "IN_QUEUE" | "IN_PROGRESS" | "FAILED" | "COMPLETED" | "CANCELLED";
 }
