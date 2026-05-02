@@ -1,6 +1,6 @@
+import { Navbar } from "@/components/navbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
-import { Navbar } from "./navbar";
 
 export default function DashboardLayout({
   children,
