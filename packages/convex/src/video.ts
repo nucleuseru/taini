@@ -102,6 +102,20 @@ export const upload = authMutation({
   },
 });
 
+export const removeVideoHandler = async (ctx: MutationCtx, id: Id<"video">) => {
+  const video = await ctx.db.get(id);
+  if (!video) return;
+  if (video.storageId) {
+    await ctx.storage.delete(video.storageId);
+  }
+  await ctx.db.delete(id);
+};
+
+export const remove = authMutation({
+  args: { id: v.id("video") },
+  handler: (ctx, args) => removeVideoHandler(ctx, args.id),
+});
+
 export const triggerInference = authMutation({
   args: { id: v.id("video") },
   handler: async (ctx, args) => {

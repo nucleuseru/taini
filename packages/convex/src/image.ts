@@ -100,6 +100,20 @@ export const upload = authMutation({
   },
 });
 
+export const removeImageHandler = async (ctx: MutationCtx, id: Id<"image">) => {
+  const image = await ctx.db.get(id);
+  if (!image) return;
+  if (image.storageId) {
+    await ctx.storage.delete(image.storageId);
+  }
+  await ctx.db.delete(id);
+};
+
+export const remove = authMutation({
+  args: { id: v.id("image") },
+  handler: (ctx, args) => removeImageHandler(ctx, args.id),
+});
+
 export const triggerInference = authMutation({
   args: { id: v.id("image") },
   handler: async (ctx, args) => {

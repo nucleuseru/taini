@@ -6,6 +6,7 @@ import {
   httpAction,
   internalAction,
   internalQuery,
+  MutationCtx,
   QueryCtx,
 } from "./_generated/server";
 import { authMutation, authQuery, internalMutation } from "./function";
@@ -92,6 +93,20 @@ export const upload = authMutation({
 
     return { voiceId };
   },
+});
+
+export const removeVoiceHandler = async (ctx: MutationCtx, id: Id<"voice">) => {
+  const voice = await ctx.db.get(id);
+  if (!voice) return;
+  if (voice.storageId) {
+    await ctx.storage.delete(voice.storageId);
+  }
+  await ctx.db.delete(id);
+};
+
+export const remove = authMutation({
+  args: { id: v.id("voice") },
+  handler: (ctx, args) => removeVoiceHandler(ctx, args.id),
 });
 
 export const getByJobId = internalQuery({

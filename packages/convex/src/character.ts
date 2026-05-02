@@ -31,6 +31,11 @@ export const AddCharacterReferenceImagesArgsValidator = v.object({
   images: v.array(v.object(CharacterFields.referenceImages.element.fields)),
 });
 
+export const RemoveCharacterReferenceImageArgsValidator = v.object({
+  id: v.id("character"),
+  imageId: v.id("image"),
+});
+
 export const getCharacterByIdHandler = (ctx: QueryCtx, id: Id<"character">) => {
   return ctx.db.get(id);
 };
@@ -78,6 +83,29 @@ export const addCharacterReferenceImagesHandler = async (
   });
 };
 
+export const removeCharacterReferenceImageHandler = async (
+  ctx: MutationCtx,
+  options: Infer<typeof RemoveCharacterReferenceImageArgsValidator>,
+) => {
+  const { id, imageId } = options;
+  const character = await ctx.db.get(id);
+  if (!character) throw new Error("Character not found");
+
+  const image = await ctx.db.get(imageId);
+  if (image) {
+    if (image.storageId) {
+      await ctx.storage.delete(image.storageId);
+    }
+    await ctx.db.delete(imageId);
+  }
+
+  await ctx.db.patch(id, {
+    referenceImages: character.referenceImages.filter(
+      (ref) => ref.imageId !== imageId,
+    ),
+  });
+};
+
 export const get = authQuery({
   args: { id: v.id("character") },
   handler: (ctx, args) => getCharacterByIdHandler(ctx, args.id),
@@ -101,6 +129,11 @@ export const update = authMutation({
 export const addReferenceImages = authMutation({
   args: AddCharacterReferenceImagesArgsValidator,
   handler: (ctx, args) => addCharacterReferenceImagesHandler(ctx, args),
+});
+
+export const removeReferenceImage = authMutation({
+  args: RemoveCharacterReferenceImageArgsValidator,
+  handler: (ctx, args) => removeCharacterReferenceImageHandler(ctx, args),
 });
 
 export const remove = authMutation({

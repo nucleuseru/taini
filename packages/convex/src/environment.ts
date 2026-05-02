@@ -25,6 +25,11 @@ export const AddEnvironmentReferenceImagesArgsValidator = v.object({
   images: v.array(v.object(EnvironmentFields.referenceImages.element.fields)),
 });
 
+export const RemoveEnvironmentReferenceImageArgsValidator = v.object({
+  id: v.id("environment"),
+  imageId: v.id("image"),
+});
+
 export const getEnvironmentByIdHandler = (
   ctx: QueryCtx,
   id: Id<"environment">,
@@ -74,6 +79,29 @@ export const addEnvironmentReferenceImagesHandler = async (
   });
 };
 
+export const removeEnvironmentReferenceImageHandler = async (
+  ctx: MutationCtx,
+  options: Infer<typeof RemoveEnvironmentReferenceImageArgsValidator>,
+) => {
+  const { id, imageId } = options;
+  const environment = await ctx.db.get(id);
+  if (!environment) throw new Error("Environment not found");
+
+  const image = await ctx.db.get(imageId);
+  if (image) {
+    if (image.storageId) {
+      await ctx.storage.delete(image.storageId);
+    }
+    await ctx.db.delete(imageId);
+  }
+
+  await ctx.db.patch(id, {
+    referenceImages: environment.referenceImages.filter(
+      (ref) => ref.imageId !== imageId,
+    ),
+  });
+};
+
 export const get = authQuery({
   args: { id: v.id("environment") },
   handler: (ctx, args) => getEnvironmentByIdHandler(ctx, args.id),
@@ -97,6 +125,11 @@ export const update = authMutation({
 export const addReferenceImages = authMutation({
   args: AddEnvironmentReferenceImagesArgsValidator,
   handler: (ctx, args) => addEnvironmentReferenceImagesHandler(ctx, args),
+});
+
+export const removeReferenceImage = authMutation({
+  args: RemoveEnvironmentReferenceImageArgsValidator,
+  handler: (ctx, args) => removeEnvironmentReferenceImageHandler(ctx, args),
 });
 
 export const remove = authMutation({

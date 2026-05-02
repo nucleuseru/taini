@@ -102,6 +102,20 @@ export const upload = authMutation({
   },
 });
 
+export const removeAudioHandler = async (ctx: MutationCtx, id: Id<"audio">) => {
+  const audio = await ctx.db.get(id);
+  if (!audio) return;
+  if (audio.storageId) {
+    await ctx.storage.delete(audio.storageId);
+  }
+  await ctx.db.delete(id);
+};
+
+export const remove = authMutation({
+  args: { id: v.id("audio") },
+  handler: (ctx, args) => removeAudioHandler(ctx, args.id),
+});
+
 export const getByTtsJobId = internalQuery({
   args: { jobId: v.string() },
   handler: (ctx, args) => {
