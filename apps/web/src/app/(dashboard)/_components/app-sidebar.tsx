@@ -1,6 +1,5 @@
 "use client";
 
-import { ProjectCreationDialog } from "@/app/(dashboard)/project-creation-dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +16,7 @@ import { useQuery } from "convex/react";
 import { FolderOpen, Home, Layers } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ProjectCreationDialog } from "./project-creation-dialog";
 
 export function AppSidebar() {
   const pathname = usePathname();
