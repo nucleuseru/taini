@@ -41,7 +41,7 @@ export function MediaFeed() {
   );
 
   if (
-    images.status === "LoadingFirstPage" ||
+    images.status === "LoadingFirstPage" &&
     videos.status === "LoadingFirstPage"
   ) {
     return <MediaFeedSkeleton />;

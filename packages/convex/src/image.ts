@@ -82,6 +82,16 @@ export const get = authQuery({
   handler: (ctx, args) => getImageByIdHandler(ctx, args.id),
 });
 
+export const getMany = authQuery({
+  args: { ids: v.array(v.id("image")) },
+  handler: async (ctx, args) => {
+    const images = await Promise.all(
+      args.ids.map((id) => getImageByIdHandler(ctx, id)),
+    );
+    return images.filter((img) => img !== null);
+  },
+});
+
 export const list = authQuery({
   args: ListImageArgsValidator,
   handler: (ctx, args) => listImagesHandler(ctx, args),
@@ -117,7 +127,11 @@ export const remove = authMutation({
 export const triggerInference = authMutation({
   args: { id: v.id("image") },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, { status: "queued" });
+    const image = await ctx.db.get(args.id);
+
+    if (!image?.storageId) {
+      await ctx.db.patch(args.id, { status: "queued" });
+    }
   },
 });
 

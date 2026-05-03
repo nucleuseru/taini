@@ -119,7 +119,11 @@ export const remove = authMutation({
 export const triggerInference = authMutation({
   args: { id: v.id("video") },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, { status: "queued" });
+    const video = await ctx.db.get(args.id);
+
+    if (!video?.storageId) {
+      await ctx.db.patch(args.id, { status: "queued" });
+    }
   },
 });
 
