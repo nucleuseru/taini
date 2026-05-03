@@ -116,6 +116,17 @@ export const remove = authMutation({
   handler: (ctx, args) => removeAudioHandler(ctx, args.id),
 });
 
+export const triggerInference = authMutation({
+  args: { id: v.id("audio") },
+  handler: async (ctx, args) => {
+    const audio = await ctx.db.get(args.id);
+
+    if (!audio?.storageId) {
+      await ctx.db.patch(args.id, { ttsStatus: "queued" });
+    }
+  },
+});
+
 export const getByTtsJobId = internalQuery({
   args: { jobId: v.string() },
   handler: (ctx, args) => {

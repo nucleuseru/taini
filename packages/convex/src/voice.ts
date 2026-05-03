@@ -109,6 +109,17 @@ export const remove = authMutation({
   handler: (ctx, args) => removeVoiceHandler(ctx, args.id),
 });
 
+export const triggerInference = authMutation({
+  args: { id: v.id("voice") },
+  handler: async (ctx, args) => {
+    const voice = await ctx.db.get(args.id);
+
+    if (!voice?.storageId) {
+      await ctx.db.patch(args.id, { status: "queued" });
+    }
+  },
+});
+
 export const getByJobId = internalQuery({
   args: { jobId: v.string() },
   handler: (ctx, args) => {

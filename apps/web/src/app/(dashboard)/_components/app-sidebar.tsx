@@ -11,18 +11,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { api } from "@repo/convex/api";
-import { useQuery } from "convex/react";
 import { FolderOpen, Home, Layers } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import React from "react";
 import { ProjectCreationDialog } from "./project-creation-dialog";
 
-export function AppSidebar() {
+export function AppSidebar({ children }: React.PropsWithChildren) {
   const pathname = usePathname();
-  const recentProjects = useQuery(api.project.list, {
-    paginationOpts: { cursor: null, numItems: 5 },
-  });
 
   return (
     <Sidebar className="border-transparent text-slate-300">
@@ -61,26 +57,7 @@ export function AppSidebar() {
             Recent Projects
           </SidebarGroupLabel>
           <SidebarGroupContent className="px-4">
-            <SidebarMenu className="gap-1">
-              {recentProjects?.page.map((project) => (
-                <SidebarMenuItem key={project._id}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname.includes(project._id)}
-                    className="group flex h-9 items-center gap-3 rounded-lg px-3 transition-all hover:bg-white/5"
-                  >
-                    <Link href={`/projects/${project._id}/storyboard`}>
-                      <div className="bg-primary/10 text-primary group-hover:bg-primary/20 flex size-5 items-center justify-center rounded-sm text-[10px] font-bold">
-                        {project.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="truncate text-xs font-medium">
-                        {project.name}
-                      </span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <SidebarMenu className="gap-1">{children}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
