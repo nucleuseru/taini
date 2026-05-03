@@ -6,20 +6,22 @@ import { cn } from "@/lib/utils";
 import { api } from "@repo/convex/api";
 import { Doc, Id } from "@repo/convex/dataModel";
 import { usePaginatedQuery } from "convex/react";
-import { ClockIcon, MusicIcon, PauseIcon, PlayIcon } from "lucide-react";
+import {
+  ClockIcon,
+  MusicIcon,
+  PauseIcon,
+  PlayIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { AudioModal } from "./audio-modal";
+import { useAudio } from "./context";
 
 export type AudioAsset = Doc<"audio"> & { url?: string | null };
 
-export function AudioFeed({
-  onSelectAsRef,
-  selectedRefId,
-}: {
-  onSelectAsRef?: (id: Id<"audio">) => void;
-  selectedRefId?: Id<"audio">;
-}) {
+export function AudioFeed() {
+  const { selectedRefAudioId, setSelectedRefAudioId } = useAudio();
   const params = useParams();
   const projectId = params.projectId as Id<"project">;
   const [selectedAudio, setSelectedAudio] = useState<AudioAsset | null>(null);
@@ -41,13 +43,9 @@ export function AudioFeed({
           <AudioCard
             key={audio._id}
             audio={audio}
-            isSelected={selectedRefId === audio._id}
+            isSelected={selectedRefAudioId === audio._id}
             onClick={() => {
-              if (onSelectAsRef) {
-                onSelectAsRef(audio._id);
-              } else {
-                setSelectedAudio(audio);
-              }
+              setSelectedRefAudioId(audio._id);
             }}
             onViewDetails={() => {
               setSelectedAudio(audio);
@@ -79,6 +77,7 @@ function AudioCard({
   isSelected?: boolean;
   onViewDetails: () => void;
 }) {
+  const { handleRemoveAudio } = useAudio();
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
     null,
@@ -93,7 +92,7 @@ function AudioCard({
       el.onended = () => {
         setIsPlaying(false);
       };
-      el.play();
+      void el.play();
       setAudioElement(el);
       setIsPlaying(true);
     } else {
@@ -101,7 +100,7 @@ function AudioCard({
         audioElement.pause();
         setIsPlaying(false);
       } else {
-        audioElement.play();
+        void audioElement.play();
         setIsPlaying(true);
       }
     }
@@ -149,6 +148,17 @@ function AudioCard({
             }}
           >
             <ClockIcon size={14} className="opacity-50" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 rounded-full opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+            onClick={(e) => {
+              e.stopPropagation();
+              void handleRemoveAudio(audio._id);
+            }}
+          >
+            <Trash2Icon size={14} />
           </Button>
           {audio.url && (
             <Button

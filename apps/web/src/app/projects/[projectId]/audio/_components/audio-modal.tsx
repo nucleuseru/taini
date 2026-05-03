@@ -46,7 +46,7 @@ export function AudioModal({ audio, onClose }: AudioModalProps) {
         <div className="flex flex-col gap-6 overflow-y-auto bg-[#1a1a1a] p-6 md:w-[400px]">
           <div>
             <h2 className="font-headline mb-1 text-lg font-semibold tracking-tight">
-              {audio.title || "Untitled Audio"}
+              {audio.title ?? "Untitled Audio"}
             </h2>
             <div className="text-[10px] tracking-wider uppercase opacity-50">
               {new Date(audio._creationTime).toLocaleString()}
@@ -109,7 +109,7 @@ export function AudioModal({ audio, onClose }: AudioModalProps) {
               >
                 <a
                   href={audio.url}
-                  download={audio.title || `audio-${audio._id}`}
+                  download={audio.title ?? `audio-${audio._id}`}
                 >
                   <DownloadIcon size={16} className="opacity-50" /> Download
                 </a>

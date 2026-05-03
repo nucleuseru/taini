@@ -113,13 +113,16 @@ export async function createElement(options: CreateElementOptions) {
     let result;
 
     if (options.type === "character") {
-      const { type: _, ...data } = options;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type: _type, ...data } = options;
       result = await fetchAuthMutation(api.character.create, data);
     } else if (options.type === "environment") {
-      const { type: _, ...data } = options;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type: _type, ...data } = options;
       result = await fetchAuthMutation(api.environment.create, data);
     } else {
-      const { type: _, ...data } = options;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type: _type, ...data } = options;
       result = await fetchAuthMutation(api.item.create, data);
     }
 
@@ -133,13 +136,16 @@ export async function createElement(options: CreateElementOptions) {
 export async function updateElement(options: UpdateElementOptions) {
   try {
     if (options.type === "character") {
-      const { type: _, ...data } = options;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type: _type, ...data } = options;
       await fetchAuthMutation(api.character.update, data);
     } else if (options.type === "environment") {
-      const { type: _, ...data } = options;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type: _type, ...data } = options;
       await fetchAuthMutation(api.environment.update, data);
     } else {
-      const { type: _, ...data } = options;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type: _type, ...data } = options;
       await fetchAuthMutation(api.item.update, data);
     }
 
