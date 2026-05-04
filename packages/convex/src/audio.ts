@@ -16,6 +16,7 @@ import { RunPodData, sortOrderValidator } from "./utils";
 
 export const ListAudioArgsValidator = v.object({
   projectId: AudioFields.projectId,
+  uploaded: v.optional(v.boolean()),
   sort: v.optional(sortOrderValidator),
   paginationOpts: paginationOptsValidator,
 });
@@ -25,6 +26,7 @@ export const GenerateAudioArgsValidator = v.object({
   text: v.string(),
   referenceVoice: v.id("voice"),
   projectId: AudioFields.projectId,
+  ttsStatus: AudioFields.ttsStatus,
 });
 
 export const UploadAudioArgsValidator = v.object({
@@ -48,6 +50,7 @@ export const listAudiosHandler = async (
     .query("audio")
     .withIndex("by_project_id", (q) => q.eq("projectId", options.projectId))
     .order(options.sort ?? "desc")
+    .filter((q) => q.eq(q.field("uploaded"), options.uploaded ?? undefined))
     .paginate(options.paginationOpts);
 
   const page = await Promise.all(
@@ -68,7 +71,7 @@ export const generateAudioHandler = async (
 ) => {
   const audioId = await ctx.db.insert("audio", {
     ...options,
-    ttsStatus: "pending",
+    ttsStatus: options.ttsStatus ?? "pending",
   });
 
   return { audioId };
@@ -119,11 +122,7 @@ export const remove = authMutation({
 export const triggerInference = authMutation({
   args: { id: v.id("audio") },
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.id);
-
-    if (!audio?.storageId) {
-      await ctx.db.patch(args.id, { ttsStatus: "queued" });
-    }
+    await ctx.db.patch(args.id, { ttsStatus: "queued" });
   },
 });
 
@@ -309,35 +308,55 @@ export const webhookStt = httpAction(async (ctx, request) => {
 });
 
 triggers.register("audio", async (ctx, change) => {
-  if (change.operation !== "update") return;
+  if (change.operation === "delete") return;
 
   // Handle TTS
-  if (change.newDoc.ttsStatus === "queued" && change.newDoc.text) {
+  if (change.newDoc.ttsStatus === "queued") {
+    if (!change.newDoc.text) {
+      await ctx.db.patch(change.id, { ttsStatus: "failed" });
+      return;
+    }
+
+    if (change.newDoc.storageId) {
+      await ctx.db.patch(change.id, { ttsStatus: "completed" });
+      return;
+    }
+
     const voice = change.newDoc.referenceVoice
       ? await ctx.db.get("voice", change.newDoc.referenceVoice)
       : null;
 
-    const referenceAudioUrl = voice?.storageId
+    const voiceClonePrompt = voice?.storageId
       ? await ctx.storage.getUrl(voice.storageId)
       : null;
 
-    if (referenceAudioUrl) {
+    if (voiceClonePrompt) {
       await ctx.scheduler.runAfter(0, internal.audio.inferenceTts, {
         id: change.id,
         text: change.newDoc.text,
-        ref_audio: referenceAudioUrl,
+        voice_clone_prompt: voiceClonePrompt,
       });
+    } else {
+      await ctx.db.patch(change.id, { ttsStatus: "failed" });
     }
   }
 
   // Handle STT
-  if (change.newDoc.sttStatus === "queued" && change.newDoc.storageId) {
+  if (change.newDoc.sttStatus === "queued") {
+    if (!change.newDoc.storageId) {
+      await ctx.db.patch(change.id, { sttStatus: "failed" });
+      return;
+    }
+
     const audioUrl = await ctx.storage.getUrl(change.newDoc.storageId);
+
     if (audioUrl) {
       await ctx.scheduler.runAfter(0, internal.audio.inferenceStt, {
         id: change.id,
         audio_url: audioUrl,
       });
+    } else {
+      await ctx.db.patch(change.id, { sttStatus: "failed" });
     }
   }
 });

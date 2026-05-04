@@ -26,6 +26,7 @@ export const GenerateImageArgsValidator = v.object({
   prompt: v.string(),
   width: ImageFields.width,
   height: ImageFields.height,
+  status: ImageFields.status,
   projectId: ImageFields.projectId,
   illustration: ImageFields.illustration,
   referenceImages: ImageFields.referenceImages,
@@ -77,7 +78,7 @@ export const generateImageHandler = async (
 ) => {
   const imageId = await ctx.db.insert("image", {
     ...options,
-    status: "pending",
+    status: options.status ?? "pending",
     seed: generateRandomInt(4_000_000_000),
   });
 
@@ -134,11 +135,7 @@ export const remove = authMutation({
 export const triggerInference = authMutation({
   args: { id: v.id("image") },
   handler: async (ctx, args) => {
-    const image = await ctx.db.get(args.id);
-
-    if (!image?.storageId) {
-      await ctx.db.patch(args.id, { status: "queued" });
-    }
+    await ctx.db.patch(args.id, { status: "queued" });
   },
 });
 
@@ -236,11 +233,16 @@ export const webhook = httpAction(async (ctx, request) => {
 });
 
 triggers.register("image", async (ctx, change) => {
-  if (change.operation !== "update") return;
+  if (change.operation === "delete") return;
   if (change.newDoc.status !== "queued") return;
 
   if (!change.newDoc.prompt?.trim()) {
-    await ctx.db.patch(change.id, { status: "pending" });
+    await ctx.db.patch(change.id, { status: "failed" });
+    return;
+  }
+
+  if (change.newDoc.storageId) {
+    await ctx.db.patch(change.id, { status: "completed" });
     return;
   }
 

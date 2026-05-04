@@ -36,13 +36,8 @@ export interface AudioContextValue {
   isSheetOpen: boolean;
   setIsSheetOpen: (open: boolean) => void;
 
-  // Actions
   handleGenerate: () => Promise<void>;
   handleClone: () => Promise<void>;
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleRemoveAudio: (id: Id<"audio">) => Promise<void>;
   handleRemoveVoice: (id: Id<"voice">) => Promise<void>;
-
-  // Refs
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
 }

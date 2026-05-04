@@ -14,13 +14,14 @@ import {
   UploadedImageSelector,
 } from "@/components/uploaded-image-selector";
 import { cn } from "@/lib/utils";
+import { api } from "@repo/convex/api";
 import { Id } from "@repo/convex/dataModel";
+import { useMutation } from "convex/react";
 import { Loader2Icon, PlusIcon, SparklesIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useActionState, useState } from "react";
 import { toast } from "sonner";
-import { generateImage, generateVideo } from "../actions";
 
 export function GenSpace() {
   const params = useParams();
@@ -36,40 +37,45 @@ export function GenSpace() {
     "landscape",
   );
 
+  const generateImage = useMutation(api.image.generate);
+  const generateVideo = useMutation(api.video.generate);
+
   const [, generateAction, isPending] = useActionState(async () => {
     if (!prompt.trim()) return;
 
     const { width, height } = getDimensions(orientation);
 
     if (activeTab === "image") {
-      const res = await generateImage({
-        projectId,
-        prompt,
-        width,
-        height,
-        referenceImages:
-          referenceImages.length > 0
-            ? referenceImages.map((img) => img._id)
-            : undefined,
-      });
-
-      if (res.error) {
-        return toast.error(res.error);
+      try {
+        await generateImage({
+          projectId,
+          prompt,
+          width,
+          height,
+          status: "queued",
+          referenceImages:
+            referenceImages.length > 0
+              ? referenceImages.map((img) => img._id)
+              : undefined,
+        });
+      } catch {
+        toast.error("Failed to generate image");
       }
     } else {
-      const res = await generateVideo({
-        projectId,
-        prompt,
-        width,
-        height,
-        frameRate: "24",
-        duration: parseInt(duration),
-        startFrame: startFrame?._id ?? undefined,
-        endFrame: endFrame?._id ?? undefined,
-      });
-
-      if (res.error) {
-        return toast.error(res.error);
+      try {
+        await generateVideo({
+          projectId,
+          prompt,
+          width,
+          height,
+          frameRate: "24",
+          status: "queued",
+          duration: parseInt(duration),
+          startFrame: startFrame?._id ?? undefined,
+          endFrame: endFrame?._id ?? undefined,
+        });
+      } catch {
+        toast.error("Failed to generate video");
       }
     }
 
@@ -183,7 +189,7 @@ export function GenSpace() {
                 ? "Describe the image you want to create..."
                 : "Describe the motion and scene..."
             }
-            className="bg-muted min-h-[120px] w-full resize-none rounded-xl border-none p-4 pb-10 text-sm leading-relaxed transition-all focus-visible:ring-1 focus-visible:ring-white/10"
+            className="bg-muted max-h-[300px] min-h-[120px] w-full resize-none rounded-xl border-none p-4 pb-10 text-sm leading-relaxed transition-all focus-visible:ring-1 focus-visible:ring-white/10"
           />
           <div className="absolute right-2 bottom-2">
             <Button

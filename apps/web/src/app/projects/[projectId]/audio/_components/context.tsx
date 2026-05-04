@@ -1,20 +1,12 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { api } from "@repo/convex/api";
 import { Id } from "@repo/convex/dataModel";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useParams } from "next/navigation";
-import React, { createContext, useContext, useRef, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { toast } from "sonner";
-import {
-  cloneVoice,
-  generateAudio,
-  getUploadUrl,
-  removeAudio,
-  removeVoice,
-  uploadAudio,
-  uploadVoice,
-} from "../actions";
 import { AudioContextValue, AudioTab, LoadingState } from "./types";
 
 const AudioContext = createContext<AudioContextValue | null>(null);
@@ -30,10 +22,14 @@ export function useAudio() {
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const projectId = params.projectId as Id<"project">;
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [activeTab, setActiveTab] = useState<AudioTab>("tts");
   const [loading, setLoading] = useState<LoadingState>(null);
+  const [confirmState, setConfirmState] = useState<{
+    title: string;
+    description: string;
+    onConfirm: () => Promise<void>;
+    variant?: "default" | "destructive";
+  } | null>(null);
 
   // TTS State
   const [text, setText] = useState("");
@@ -54,6 +50,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     selectedRefAudioId ? { id: selectedRefAudioId } : "skip",
   );
 
+  // Mutations
+  const generateAudio = useMutation(api.audio.generate);
+  const cloneVoice = useMutation(api.voice.clone);
+  const removeAudio = useMutation(api.audio.remove);
+  const removeVoice = useMutation(api.voice.remove);
+
   // UI State
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -69,20 +71,18 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     setLoading("generate");
     try {
-      const res = await generateAudio({
+      await generateAudio({
         projectId,
         text,
         title: text.slice(0, 20) + (text.length > 20 ? "..." : ""),
         referenceVoice: selectedVoiceId,
+        ttsStatus: "queued",
       });
 
-      if (res.success) {
-        toast.success("Audio generation queued");
-        setText("");
-      } else {
-        toast.error(res.error ?? "Failed to generate audio");
-      }
-    } catch {
+      toast.success("Audio generation queued");
+      setText("");
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to generate audio");
     } finally {
       setLoading(null);
@@ -101,111 +101,65 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     setLoading("clone");
     try {
-      const res = await cloneVoice({
+      await cloneVoice({
         projectId,
         name: voiceName,
         referenceAudio: selectedRefAudioId,
       });
 
-      if (res.success) {
-        toast.success("Voice cloning queued");
-        setVoiceName("");
-        setSelectedRefAudioId(null);
-      } else {
-        toast.error(res.error ?? "Failed to clone voice");
-      }
-    } catch {
+      toast.success("Voice cloning queued");
+      setVoiceName("");
+      setSelectedRefAudioId(null);
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to clone voice");
     } finally {
       setLoading(null);
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const modalType = activeTab === "clone" ? "upload-audio" : "upload-voice";
-    setLoading(modalType);
-
-    try {
-      const postUrl = await getUploadUrl();
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-
-      const { storageId } = (await result.json()) as {
-        storageId: Id<"_storage">;
-      };
-
-      if (activeTab === "clone") {
-        const res = await uploadAudio({
-          projectId,
-          title: `Ref: ${file.name}`,
-          storageId,
-        });
-
-        if (res.success) {
-          toast.success("Reference audio uploaded");
-        } else {
-          toast.error(res.error ?? "Failed to upload reference audio");
-        }
-      } else {
-        const res = await uploadVoice({
-          projectId,
-          name: file.name.split(".")[0] ?? "Unnamed",
-          storageId,
-        });
-        if (res.success) {
-          toast.success("Voice uploaded successfully");
-        } else {
-          toast.error(res.error ?? "Failed to upload voice");
-        }
-      }
-    } catch {
-      toast.error("Failed to upload file");
-    } finally {
-      setLoading(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
   const handleRemoveAudio = async (id: Id<"audio">) => {
-    if (!confirm("Are you sure you want to remove this audio?")) return;
-    setLoading("remove-audio");
-    try {
-      const res = await removeAudio(id);
-      if (res.success) {
-        toast.success("Audio removed");
-        if (selectedRefAudioId === id) setSelectedRefAudioId(null);
-      } else {
-        toast.error(res.error);
-      }
-    } catch {
-      toast.error("Failed to remove audio");
-    } finally {
-      setLoading(null);
-    }
+    setConfirmState({
+      title: "Remove Audio",
+      description:
+        "Are you sure you want to remove this audio? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        setLoading("remove-audio");
+        try {
+          await removeAudio({ id });
+          toast.success("Audio removed");
+          if (selectedRefAudioId === id) setSelectedRefAudioId(null);
+        } catch (error) {
+          console.error(error);
+          toast.error("Failed to remove audio");
+        } finally {
+          setLoading(null);
+        }
+      },
+    });
   };
 
   const handleRemoveVoice = async (id: Id<"voice">) => {
-    if (!confirm("Are you sure you want to remove this voice?")) return;
-    setLoading("remove-voice");
-    try {
-      const res = await removeVoice(id);
-      if (res.success) {
-        toast.success("Voice removed");
-        if (selectedVoiceId === id) setSelectedVoiceId(null);
-      } else {
-        toast.error(res.error);
-      }
-    } catch {
-      toast.error("Failed to remove voice");
-    } finally {
-      setLoading(null);
-    }
+    setConfirmState({
+      title: "Remove Voice",
+      description:
+        "Are you sure you want to remove this voice clone? This action cannot be undone.",
+      variant: "destructive",
+      onConfirm: async () => {
+        setLoading("remove-voice");
+        try {
+          await removeVoice({ id });
+          toast.success("Voice removed");
+          if (selectedVoiceId === id) setSelectedVoiceId(null);
+        } catch (error) {
+          console.error(error);
+          toast.error("Failed to remove voice");
+        } finally {
+          setLoading(null);
+        }
+      },
+    });
   };
 
   const value: AudioContextValue = {
@@ -228,13 +182,27 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setIsSheetOpen,
     handleGenerate,
     handleClone,
-    handleFileUpload,
     handleRemoveAudio,
     handleRemoveVoice,
-    fileInputRef,
   };
 
   return (
-    <AudioContext.Provider value={value}>{children}</AudioContext.Provider>
+    <AudioContext.Provider value={value}>
+      {children}
+      <ConfirmDialog
+        open={!!confirmState}
+        onOpenChange={(open) => {
+          if (!open) setConfirmState(null);
+        }}
+        title={confirmState?.title ?? ""}
+        description={confirmState?.description ?? ""}
+        variant={confirmState?.variant}
+        onConfirm={
+          confirmState?.onConfirm
+            ? () => void confirmState.onConfirm()
+            : () => void 0
+        }
+      />
+    </AudioContext.Provider>
   );
 }

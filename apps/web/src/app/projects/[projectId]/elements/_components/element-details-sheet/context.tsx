@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@repo/convex/api";
 import { Id } from "@repo/convex/dataModel";
@@ -30,6 +31,7 @@ import {
   uploadElementReferenceImage,
   UploadElementReferenceImageOptions,
 } from "../../actions";
+
 import {
   AddRefSchema,
   AddRefValues,
@@ -68,6 +70,12 @@ export function ElementDetailsProvider({
     useState<ElementDetailsContextValue["selectedRef"]>(null);
   const [addRefModal, setAddRefModal] =
     useState<ElementDetailsContextValue["addRefModal"]>(null);
+  const [confirmState, setConfirmState] = useState<{
+    title: string;
+    description: string;
+    onConfirm: () => Promise<void>;
+    variant?: "default" | "destructive";
+  } | null>(null);
 
   const imageIds = element.referenceImages.map((ref) => ref.imageId);
   const images = useQuery(api.image.getMany, { ids: imageIds });
@@ -267,56 +275,59 @@ export function ElementDetailsProvider({
   };
 
   const handleRemoveImage = async (imageId: Id<"image">) => {
-    if (!confirm("Are you sure you want to remove this reference image?"))
-      return;
+    setConfirmState({
+      title: "Remove Reference Image",
+      description: "Are you sure you want to remove this reference image?",
+      variant: "destructive",
+      onConfirm: async () => {
+        setLoading(`remove-${imageId}`);
+        try {
+          const res = await removeReferenceImage({
+            imageId,
+            id: element._id,
+            type: element.type,
+          } as RemoveReferenceImageOptions);
 
-    setLoading(`remove-${imageId}`);
-
-    try {
-      const res = await removeReferenceImage({
-        imageId,
-        id: element._id,
-        type: element.type,
-      } as RemoveReferenceImageOptions);
-
-      if (res.success) {
-        toast.success("Reference image removed");
-      } else {
-        toast.error(res.error);
-      }
-    } catch {
-      toast.error("Failed to remove image");
-    } finally {
-      setLoading(null);
-    }
+          if (res.success) {
+            toast.success("Reference image removed");
+          } else {
+            toast.error(res.error);
+          }
+        } catch {
+          toast.error("Failed to remove image");
+        } finally {
+          setLoading(null);
+        }
+      },
+    });
   };
 
   const handleDeleteElement = async () => {
-    if (
-      !confirm(
-        `Are you sure you want to delete this ${element.type}? This action cannot be undone.`,
-      )
-    )
-      return;
+    setConfirmState({
+      title: `Delete ${element.type}`,
+      description: `Are you sure you want to delete this ${element.type}? This action cannot be undone.`,
+      variant: "destructive",
+      onConfirm: async () => {
+        setLoading("delete-element");
+        try {
+          const res = await removeElement({
+            id: element._id,
+            type: element.type,
+          } as RemoveElementOptions);
 
-    setLoading("delete-element");
-    try {
-      const res = await removeElement({
-        id: element._id,
-        type: element.type,
-      } as RemoveElementOptions);
-
-      if (res.success) {
-        toast.success(`${element.type} deleted`);
-        onClose();
-      } else {
-        toast.error(res.error);
-      }
-    } catch {
-      toast.error("Failed to delete element");
-    } finally {
-      setLoading(null);
-    }
+          if (res.success) {
+            toast.success(`${element.type} deleted`);
+            onClose();
+          } else {
+            toast.error(res.error);
+          }
+        } catch {
+          toast.error("Failed to delete element");
+        } finally {
+          setLoading(null);
+        }
+      },
+    });
   };
 
   const value: ElementDetailsContextValue = {
@@ -345,6 +356,20 @@ export function ElementDetailsProvider({
   return (
     <ElementDetailsContext.Provider value={value}>
       {children}
+      <ConfirmDialog
+        open={!!confirmState}
+        onOpenChange={(open) => {
+          if (!open) setConfirmState(null);
+        }}
+        title={confirmState?.title ?? ""}
+        description={confirmState?.description ?? ""}
+        onConfirm={
+          confirmState?.onConfirm
+            ? () => void confirmState.onConfirm()
+            : () => void 0
+        }
+        variant={confirmState?.variant}
+      />
     </ElementDetailsContext.Provider>
   );
 }

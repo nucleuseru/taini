@@ -1,34 +1,25 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { api } from "@repo/convex/api";
 import { Doc, Id } from "@repo/convex/dataModel";
 import { usePaginatedQuery } from "convex/react";
-import {
-  ClockIcon,
-  MusicIcon,
-  PauseIcon,
-  PlayIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { MusicIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { AudioModal } from "./audio-modal";
-import { useAudio } from "./context";
 
 export type AudioAsset = Doc<"audio"> & { url?: string | null };
 
 export function AudioFeed() {
-  const { selectedRefAudioId, setSelectedRefAudioId } = useAudio();
   const params = useParams();
   const projectId = params.projectId as Id<"project">;
   const [selectedAudio, setSelectedAudio] = useState<AudioAsset | null>(null);
 
   const audios = usePaginatedQuery(
     api.audio.list,
-    { projectId },
+    { projectId, uploaded: false },
     { initialNumItems: 1024 },
   );
 
@@ -40,17 +31,39 @@ export function AudioFeed() {
     <>
       <div className="grid w-full grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 lg:px-8 xl:grid-cols-4">
         {audios.results.map((audio) => (
-          <AudioCard
+          <div
             key={audio._id}
-            audio={audio}
-            isSelected={selectedRefAudioId === audio._id}
             onClick={() => {
-              setSelectedRefAudioId(audio._id);
-            }}
-            onViewDetails={() => {
               setSelectedAudio(audio);
             }}
-          />
+            className={cn(
+              "bg-card relative flex aspect-video cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md p-6 transition-transform hover:scale-[1.02]",
+              (audio.ttsStatus === "generating" ||
+                audio.sttStatus === "generating") &&
+                "bg-background",
+            )}
+          >
+            {audio.url ? (
+              <MusicIcon
+                size={32}
+                className="text-muted-foreground opacity-20"
+              />
+            ) : (
+              (audio.ttsStatus === "generating" ||
+                audio.sttStatus === "generating") && (
+                <Skeleton className="bg-card h-full w-full" />
+              )
+            )}
+
+            <div className="mt-4 w-full px-2">
+              <div className="truncate text-sm font-medium text-[#e5e2e1]">
+                {audio.title ?? "Untitled Audio"}
+              </div>
+              <div className="text-muted-foreground truncate text-[10px] tracking-tight uppercase opacity-50">
+                {audio.text ?? "No description"}
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -66,121 +79,11 @@ export function AudioFeed() {
   );
 }
 
-function AudioCard({
-  audio,
-  onClick,
-  isSelected,
-  onViewDetails,
-}: {
-  audio: AudioAsset;
-  onClick: () => void;
-  isSelected?: boolean;
-  onViewDetails: () => void;
-}) {
-  const { handleRemoveAudio } = useAudio();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
-    null,
-  );
-
-  const togglePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!audio.url) return;
-
-    if (!audioElement) {
-      const el = new Audio(audio.url);
-      el.onended = () => {
-        setIsPlaying(false);
-      };
-      void el.play();
-      setAudioElement(el);
-      setIsPlaying(true);
-    } else {
-      if (isPlaying) {
-        audioElement.pause();
-        setIsPlaying(false);
-      } else {
-        void audioElement.play();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  return (
-    <div
-      className={cn(
-        "group bg-card relative cursor-pointer overflow-hidden rounded-md p-4 transition-all hover:scale-[1.02]",
-        isSelected && "ring-2 ring-[#efcb61]",
-      )}
-      onClick={onClick}
-    >
-      <div className="flex items-center gap-4">
-        <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-sm">
-          <MusicIcon size={20} className="text-muted-foreground" />
-        </div>
-        <div className="flex flex-col overflow-hidden">
-          <span className="truncate text-sm font-medium text-[#e5e2e1]">
-            {audio.title ?? "Untitled Audio"}
-          </span>
-          <span className="text-muted-foreground truncate text-xs">
-            {audio.text ?? "No text description"}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex gap-2">
-          {audio.ttsStatus && (
-            <span className="rounded-sm border border-[#353534] bg-[#131313]/80 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#e5e2e1] uppercase">
-              TTS: {audio.ttsStatus}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewDetails();
-            }}
-          >
-            <ClockIcon size={14} className="opacity-50" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 rounded-full opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
-            onClick={(e) => {
-              e.stopPropagation();
-              void handleRemoveAudio(audio._id);
-            }}
-          >
-            <Trash2Icon size={14} />
-          </Button>
-          {audio.url && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 rounded-full"
-              onClick={togglePlay}
-            >
-              {isPlaying ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function AudioFeedSkeleton() {
   return (
     <div className="grid w-full grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 lg:px-8 xl:grid-cols-4">
-      {Array.from({ length: 12 }).map((_, i) => (
-        <Skeleton key={i} className="bg-card h-32 w-full rounded-md" />
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Skeleton key={i} className="bg-card aspect-video rounded-md" />
       ))}
     </div>
   );

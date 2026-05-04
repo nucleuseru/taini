@@ -63,7 +63,7 @@ export function MediaModal({ media, onClose }: MediaModelProps) {
               )}
             </div>
 
-            <div className="bg-card flex flex-col gap-6 overflow-y-auto p-6 md:w-[320px]">
+            <div className="bg-card flex flex-col gap-6 overflow-y-auto p-6 md:w-[320px] lg:w-[400px]">
               <div>
                 <h2 className="font-headline mb-1 text-lg font-semibold tracking-tight">
                   {media.type === "video" ? "Video" : "Image"}

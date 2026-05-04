@@ -2,15 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  DrawerDialog,
+  DrawerDialogClose,
+  DrawerDialogContent,
+  DrawerDialogDescription,
+  DrawerDialogFooter,
+  DrawerDialogHeader,
+  DrawerDialogTitle,
+  DrawerDialogTrigger,
+} from "@/components/ui/drawer-dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,21 +38,21 @@ export function ProjectCreationDialog() {
   });
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <DrawerDialog>
+      <DrawerDialogTrigger asChild>
         <Button variant="outline" size="lg" className="w-full">
           <Plus className="h-4 w-4" />
           New Project
         </Button>
-      </DialogTrigger>
-      <DialogContent>
+      </DrawerDialogTrigger>
+      <DrawerDialogContent>
         <form onSubmit={(e) => void onSubmit(e)}>
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription>
+          <DrawerDialogHeader>
+            <DrawerDialogTitle>Create New Project</DrawerDialogTitle>
+            <DrawerDialogDescription>
               Give your project a name to get started with your film production.
-            </DialogDescription>
-          </DialogHeader>
+            </DrawerDialogDescription>
+          </DrawerDialogHeader>
           <div className="grid gap-4 py-4">
             <Controller
               name="name"
@@ -75,8 +75,8 @@ export function ProjectCreationDialog() {
               )}
             />
           </div>
-          <DialogFooter>
-            <DialogClose asChild>
+          <DrawerDialogFooter>
+            <DrawerDialogClose asChild>
               <Button
                 type="button"
                 variant="ghost"
@@ -84,16 +84,16 @@ export function ProjectCreationDialog() {
               >
                 Cancel
               </Button>
-            </DialogClose>
+            </DrawerDialogClose>
             <Button disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               <span>Create Project</span>
             </Button>
-          </DialogFooter>
+          </DrawerDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DrawerDialogContent>
+    </DrawerDialog>
   );
 }
