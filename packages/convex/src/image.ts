@@ -17,6 +17,8 @@ import { generateRandomInt, RunPodData, sortOrderValidator } from "./utils";
 export const ListImageArgsValidator = v.object({
   projectId: ImageFields.projectId,
   sort: v.optional(sortOrderValidator),
+  uploaded: v.optional(v.boolean()),
+  illustration: v.optional(v.boolean()),
   paginationOpts: paginationOptsValidator,
 });
 
@@ -32,7 +34,6 @@ export const GenerateImageArgsValidator = v.object({
 export const UploadImageArgsValidator = v.object({
   storageId: v.id("_storage"),
   projectId: ImageFields.projectId,
-  illustration: ImageFields.illustration,
 });
 
 export const getImageByIdHandler = async (ctx: QueryCtx, id: Id<"image">) => {
@@ -50,6 +51,12 @@ export const listImagesHandler = async (
     .query("image")
     .withIndex("by_project_id", (q) => q.eq("projectId", options.projectId))
     .order(options.sort ?? "desc")
+    .filter((q) =>
+      q.and(
+        q.eq(q.field("uploaded"), options.uploaded ?? undefined),
+        q.eq(q.field("illustration"), options.illustration ?? undefined),
+      ),
+    )
     .paginate(options.paginationOpts);
 
   const page = await Promise.all(

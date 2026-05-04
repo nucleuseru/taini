@@ -274,7 +274,12 @@ export const webhookTts = httpAction(async (ctx, request) => {
 
 export const webhookStt = httpAction(async (ctx, request) => {
   const data = (await request.json()) as RunPodData<{
-    timestamps: Infer<typeof AudioFields.timestamps>;
+    text: string;
+    segments: {
+      start: number;
+      end: number;
+      text: string;
+    }[];
   }>;
   const audio = await ctx.runQuery(internal.audio.getBySttJobId, {
     jobId: data.id,
@@ -286,7 +291,12 @@ export const webhookStt = httpAction(async (ctx, request) => {
     await ctx.runMutation(internal.audio.update, {
       id: audio._id,
       sttStatus: "completed",
-      timestamps: data.output.timestamps,
+      text: data.output.text,
+      timestamps: data.output.segments.map((s) => ({
+        start: s.start,
+        end: s.end,
+        text: s.text,
+      })),
     });
   } else {
     await ctx.runMutation(internal.audio.update, {

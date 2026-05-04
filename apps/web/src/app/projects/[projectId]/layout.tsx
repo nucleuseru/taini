@@ -12,10 +12,8 @@ export default function ProjectLayout({
         <ProjectTabs />
       </Suspense>
 
-      <main className="mx-auto w-full max-w-screen-2xl flex-1 p-6">
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-          {children}
-        </div>
+      <main className="mx-auto w-full max-w-screen-2xl flex-1 pt-28">
+        {children}
       </main>
     </div>
   );

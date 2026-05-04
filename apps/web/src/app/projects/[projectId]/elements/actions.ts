@@ -219,7 +219,6 @@ export async function uploadElementReferenceImage(
     const { imageId } = await fetchAuthMutation(api.image.upload, {
       projectId: options.projectId,
       storageId: options.storageId,
-      illustration: true,
     });
 
     const refData = {

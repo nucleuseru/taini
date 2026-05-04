@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: React.PropsWithChildren) {
           <RecentProjects />
         </Suspense>
       </AppSidebar>
-      <main className="flex-1 overflow-y-auto pt-16">{children}</main>
+      <main className="flex-1 overflow-y-auto pt-[68px]">{children}</main>
     </SidebarProvider>
   );
 }

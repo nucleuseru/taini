@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { api } from "@repo/convex/api";
 import { Doc, Id } from "@repo/convex/dataModel";
 import { usePaginatedQuery } from "convex/react";
@@ -58,7 +59,12 @@ export function MediaFeed() {
               setSelectedMedia(media);
             }}
           >
-            <div className="relative aspect-video bg-[#131313]">
+            <div
+              className={cn(
+                "relative aspect-video",
+                media.status === "generating" ? "bg-background" : "bg-card",
+              )}
+            >
               {media.url ? (
                 media.type === "video" ? (
                   <video
@@ -84,7 +90,7 @@ export function MediaFeed() {
               )}
             </div>
 
-            <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute top-2 right-2">
               <span className="rounded-sm border border-[#353534] bg-[#131313]/80 px-2 py-1 text-[10px] font-semibold tracking-wider text-[#e5e2e1] uppercase backdrop-blur-md">
                 {media.type}
               </span>
@@ -108,7 +114,7 @@ export function MediaFeed() {
 export function MediaFeedSkeleton() {
   return (
     <div className="grid w-full grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 lg:px-8 xl:grid-cols-4">
-      {Array.from({ length: 10 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <Skeleton key={i} className="bg-card aspect-video" />
       ))}
     </div>
