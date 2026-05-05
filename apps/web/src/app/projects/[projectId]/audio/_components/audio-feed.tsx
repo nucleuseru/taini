@@ -19,7 +19,7 @@ export function AudioFeed() {
 
   const audios = usePaginatedQuery(
     api.audio.list,
-    { projectId, uploaded: false },
+    { projectId },
     { initialNumItems: 1024 },
   );
 

@@ -142,6 +142,7 @@ export const StoryboardFields = {
   style: optional(v.string()),
   width: optional(v.number()),
   height: optional(v.number()),
+  audio: optional(v.boolean()),
   referenceStyle: optional(v.id("image")),
   frameRate: optional(
     v.union(v.literal("24"), v.literal("30"), v.literal("60")),

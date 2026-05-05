@@ -7,7 +7,7 @@ import {
 
 export default function ElementsPage() {
   return (
-    <main className="flex min-h-full w-full flex-col items-center pt-16 pb-24">
+    <main className="flex min-h-full w-full flex-col items-center pb-24">
       <Suspense fallback={<ElementsFeedSkeleton />}>
         <ElementsFeed />
       </Suspense>

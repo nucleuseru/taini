@@ -1,15 +1,12 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@repo/convex/api";
 import { useQuery } from "convex/react";
-import { MountainIcon, PackageIcon, UserIcon } from "lucide-react";
+import { MountainIcon, PackageIcon, UserIcon, Zap } from "lucide-react";
 import Image from "next/image";
-import { ElementType } from "../actions";
 import { Element } from "./element-details-sheet/types";
 
 export type ElementCardProps = Element & {
-  type: ElementType;
   onClick: () => void;
 };
 
@@ -34,38 +31,54 @@ export function ElementCard({
 
   return (
     <div
-      className="group relative cursor-pointer overflow-hidden rounded-md transition-transform hover:scale-[1.02]"
+      className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[#0f0f0f] ring-1 ring-white/5 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-black hover:ring-white/10"
       onClick={onClick}
     >
-      <div className="relative aspect-square bg-[#131313]">
+      <div className="relative aspect-square w-full overflow-hidden">
         {image?.url ? (
           <Image
             src={image.url}
-            width={image.width ?? 1024}
-            height={image.height ?? 1024}
             alt={name}
-            className="h-full w-full object-cover"
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
           />
-        ) : firstImageId && (!image || image.status === "generating") ? (
-          <Skeleton className="bg-card h-full w-full" />
+        ) : firstImageId && (!image || image.status === "pending") ? (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[#131313]">
+            <Zap size={24} className="animate-pulse text-[#efcb61]/40" />
+            <span className="text-[9px] font-bold tracking-[0.2em] text-white/20 uppercase">
+              Inference Pending
+            </span>
+          </div>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[#1a1a1a]">
-            <Icon size={48} className="text-[#353534]" />
+          <div className="flex h-full w-full items-center justify-center bg-[#131313]">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
+              <Icon size={24} className="text-white/20" />
+            </div>
           </div>
         )}
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-linear-to-t from-[#0f0f0f] via-[#0f0f0f]/10 to-transparent opacity-60 transition-opacity duration-500 group-hover:opacity-40" />
       </div>
 
-      <div className="absolute top-2 right-2 flex items-center gap-2">
-        <span className="flex h-6 w-6 items-center justify-center rounded-sm border border-[#353534] bg-[#131313]/80 backdrop-blur-md">
-          <Icon size={12} className="text-[#e5e2e1]" />
-        </span>
+      <div className="absolute top-4 right-4">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 ring-1 ring-white/10 backdrop-blur-xl transition-colors group-hover:bg-[#efcb61]/10 group-hover:ring-[#efcb61]/20">
+          <Icon
+            size={14}
+            className="text-white/60 transition-colors group-hover:text-[#efcb61]"
+          />
+        </div>
       </div>
 
-      <div className="bg-card/50 absolute inset-x-0 bottom-0 p-3 backdrop-blur-sm">
-        <h3 className="truncate text-sm font-medium text-[#e5e2e1]">{name}</h3>
-        <p className="text-[10px] tracking-wider text-[#e5e2e1]/50 uppercase">
-          {type}
-        </p>
+      <div className="absolute inset-x-0 bottom-0 p-5">
+        <div className="flex flex-col gap-1">
+          <div className="text-[10px] font-bold tracking-[0.2em] text-[#efcb61] uppercase">
+            {type}
+          </div>
+          <h3 className="font-headline truncate text-lg font-bold tracking-tight text-white transition-colors group-hover:text-[#efcb61]">
+            {name}
+          </h3>
+        </div>
       </div>
     </div>
   );

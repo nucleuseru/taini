@@ -4,7 +4,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@repo/convex/api";
 import { Id } from "@repo/convex/dataModel";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useParams } from "next/navigation";
 import React, {
   createContext,
@@ -15,23 +15,6 @@ import React, {
 } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import {
-  generateElementReferenceImage,
-  GenerateElementReferenceImageOptions,
-  getUploadUrl,
-  regenerateReferenceImage,
-  RegenerateReferenceImageOptions,
-  removeElement,
-  RemoveElementOptions,
-  removeReferenceImage,
-  RemoveReferenceImageOptions,
-  triggerElementInference,
-  updateElement,
-  UpdateElementOptions,
-  uploadElementReferenceImage,
-  UploadElementReferenceImageOptions,
-} from "../../actions";
-
 import {
   AddRefSchema,
   AddRefValues,
@@ -80,6 +63,31 @@ export function ElementDetailsProvider({
   const imageIds = element.referenceImages.map((ref) => ref.imageId);
   const images = useQuery(api.image.getMany, { ids: imageIds });
 
+  // Mutations
+  const updateCharacter = useMutation(api.character.update);
+  const updateEnvironment = useMutation(api.environment.update);
+  const updateItem = useMutation(api.item.update);
+
+  const removeCharacter = useMutation(api.character.remove);
+  const removeEnvironment = useMutation(api.environment.remove);
+  const removeItem = useMutation(api.item.remove);
+
+  const generateImage = useMutation(api.image.generate);
+  const uploadImage = useMutation(api.image.upload);
+  const triggerInference = useMutation(api.image.triggerInference);
+
+  const addRefCharacter = useMutation(api.character.addReferenceImages);
+  const addRefEnvironment = useMutation(api.environment.addReferenceImages);
+  const addRefItem = useMutation(api.item.addReferenceImages);
+
+  const removeRefCharacter = useMutation(api.character.removeReferenceImage);
+  const removeRefEnvironment = useMutation(
+    api.environment.removeReferenceImage,
+  );
+  const removeRefItem = useMutation(api.item.removeReferenceImage);
+
+  const generateUploadUrl = useMutation(api.upload.generateUrl);
+
   const form = useForm<MetadataFormValues>({
     resolver: zodResolver(MetadataFormSchema),
     defaultValues: {
@@ -117,18 +125,32 @@ export function ElementDetailsProvider({
   const onMetadataSubmit = form.handleSubmit(async (data) => {
     setLoading("save-metadata");
     try {
-      const res = await updateElement({
-        type: element.type,
-        id: element._id,
-        ...data,
-      } as UpdateElementOptions);
-      if (res.success) {
-        toast.success("Details updated");
-        form.reset(data);
+      if (element.type === "character") {
+        await updateCharacter({
+          id: element._id,
+          name: data.name,
+          age: data.age,
+          description: data.description,
+          appearance: data.appearance,
+          personality: data.personality,
+        });
+      } else if (element.type === "environment") {
+        await updateEnvironment({
+          id: element._id,
+          name: data.name,
+          description: data.description,
+        });
       } else {
-        toast.error(res.error ?? "Failed to update details");
+        await updateItem({
+          id: element._id,
+          name: data.name,
+          description: data.description,
+        });
       }
-    } catch {
+      toast.success("Details updated");
+      form.reset(data);
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to update details");
     } finally {
       setLoading(null);
@@ -142,6 +164,8 @@ export function ElementDetailsProvider({
     setLoading(modalType);
 
     try {
+      let imageId: Id<"image">;
+
       if (modalType === "generate") {
         const promptParts = [
           data.name,
@@ -153,53 +177,54 @@ export function ElementDetailsProvider({
         ].filter(Boolean);
         const prompt = promptParts.join(", ");
 
-        const res = await generateElementReferenceImage({
+        const res = await generateImage({
           projectId,
-          id: element._id,
-          type: element.type,
           prompt,
-          name: data.name,
-          description: data.description,
-        } as GenerateElementReferenceImageOptions);
-
-        if (res.success) {
-          toast.success("Reference image queued");
-          setAddRefModal(null);
-          addRefForm.reset();
-        } else {
-          toast.error(res.error ?? "Failed to generate reference image");
-        }
+          illustration: true,
+        });
+        imageId = res.imageId;
       } else if (addRefModal.file) {
         const file = addRefModal.file;
-        const uploadUrl = await getUploadUrl();
+        const uploadUrl = await generateUploadUrl();
         const result = await fetch(uploadUrl, {
           method: "POST",
           headers: { "Content-Type": file.type },
           body: file,
         });
-        const { storageId } = (await result.json()) as Record<
-          "storageId",
-          Id<"_storage">
-        >;
+        const { storageId } = (await result.json()) as {
+          storageId: Id<"_storage">;
+        };
 
-        const res = await uploadElementReferenceImage({
+        const res = await uploadImage({
           projectId,
           storageId,
-          id: element._id,
-          type: element.type,
-          name: data.name,
-          description: data.description,
-        } as UploadElementReferenceImageOptions);
-
-        if (res.success) {
-          toast.success("Image uploaded successfully");
-          setAddRefModal(null);
-          addRefForm.reset();
-        } else {
-          toast.error(res.error ?? "Failed to upload reference image");
-        }
+        });
+        imageId = res.imageId;
+      } else {
+        return;
       }
-    } catch {
+
+      const refData = {
+        imageId,
+        name: data.name,
+        description: data.description,
+      };
+
+      if (element.type === "character") {
+        await addRefCharacter({ id: element._id, images: [refData] });
+      } else if (element.type === "environment") {
+        await addRefEnvironment({ id: element._id, images: [refData] });
+      } else {
+        await addRefItem({ id: element._id, images: [refData] });
+      }
+
+      toast.success(
+        modalType === "generate" ? "Reference image queued" : "Image uploaded",
+      );
+      setAddRefModal(null);
+      addRefForm.reset();
+    } catch (error) {
+      console.error(error);
       toast.error(`Failed to ${modalType}`);
     } finally {
       setLoading(null);
@@ -211,31 +236,6 @@ export function ElementDetailsProvider({
     if (!file) return;
     setAddRefModal({ type: "upload", file });
     addRefForm.reset({ name: file.name, description: "" });
-  };
-
-  const handleTriggerInference = async () => {
-    const pendingImageIds =
-      images?.filter((img) => img.status === "pending").map((img) => img._id) ??
-      [];
-
-    if (pendingImageIds.length === 0) {
-      toast.info("No pending images to generate");
-      return;
-    }
-
-    setLoading("inference");
-    try {
-      const res = await triggerElementInference(pendingImageIds);
-      if (res.success) {
-        toast.success("Inference triggered for all pending assets");
-      } else {
-        toast.error(res.error);
-      }
-    } catch {
-      toast.error("Failed to trigger inference");
-    } finally {
-      setLoading(null);
-    }
   };
 
   const handleRegenerate = async (imageId: Id<"image">) => {
@@ -252,22 +252,30 @@ export function ElementDetailsProvider({
       ].filter(Boolean);
       const prompt = promptParts.join(", ");
 
-      const res = await regenerateReferenceImage({
+      const { imageId: newImageId } = await generateImage({
         projectId,
-        id: element._id,
-        type: element.type,
-        oldImageId: imageId,
         prompt,
+        illustration: true,
+      });
+
+      const refData = {
         name: ref?.name ?? "Regenerated Ref",
         description: ref?.description ?? undefined,
-      } as RegenerateReferenceImageOptions);
+        imageId: newImageId,
+      };
 
-      if (res.success) {
-        toast.success("Reference image regeneration started");
+      if (element.type === "character") {
+        await addRefCharacter({ id: element._id, images: [refData] });
+      } else if (element.type === "environment") {
+        await addRefEnvironment({ id: element._id, images: [refData] });
       } else {
-        toast.error(res.error ?? "Failed to regenerate reference image");
+        await addRefItem({ id: element._id, images: [refData] });
       }
-    } catch {
+
+      await triggerInference({ id: newImageId });
+      toast.success("Regeneration started. New version added.");
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to regenerate reference image");
     } finally {
       setLoading(null);
@@ -282,18 +290,17 @@ export function ElementDetailsProvider({
       onConfirm: async () => {
         setLoading(`remove-${imageId}`);
         try {
-          const res = await removeReferenceImage({
-            imageId,
-            id: element._id,
-            type: element.type,
-          } as RemoveReferenceImageOptions);
-
-          if (res.success) {
-            toast.success("Reference image removed");
+          if (element.type === "character") {
+            await removeRefCharacter({ id: element._id, imageId });
+          } else if (element.type === "environment") {
+            await removeRefEnvironment({ id: element._id, imageId });
           } else {
-            toast.error(res.error);
+            await removeRefItem({ id: element._id, imageId });
           }
-        } catch {
+          toast.success("Reference image removed");
+          if (selectedRef?.imageId === imageId) setSelectedRef(null);
+        } catch (error) {
+          console.error(error);
           toast.error("Failed to remove image");
         } finally {
           setLoading(null);
@@ -310,18 +317,17 @@ export function ElementDetailsProvider({
       onConfirm: async () => {
         setLoading("delete-element");
         try {
-          const res = await removeElement({
-            id: element._id,
-            type: element.type,
-          } as RemoveElementOptions);
-
-          if (res.success) {
-            toast.success(`${element.type} deleted`);
-            onClose();
+          if (element.type === "character") {
+            await removeCharacter({ id: element._id });
+          } else if (element.type === "environment") {
+            await removeEnvironment({ id: element._id });
           } else {
-            toast.error(res.error);
+            await removeItem({ id: element._id });
           }
-        } catch {
+          toast.success(`${element.type} deleted`);
+          onClose();
+        } catch (error) {
+          console.error(error);
           toast.error("Failed to delete element");
         } finally {
           setLoading(null);
@@ -346,11 +352,14 @@ export function ElementDetailsProvider({
     setAddRefModal,
     onMetadataSubmit,
     onAddRefSubmit,
-    handleTriggerInference,
     handleRegenerate,
     handleRemoveImage,
     handleDeleteElement,
     handleFileChange,
+    triggerInference,
+    addRefCharacter,
+    addRefEnvironment,
+    addRefItem,
   };
 
   return (

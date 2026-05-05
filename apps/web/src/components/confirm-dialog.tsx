@@ -40,7 +40,7 @@ export function ConfirmDialog({
           <DrawerDialogTitle>{title}</DrawerDialogTitle>
           <DrawerDialogDescription>{description}</DrawerDialogDescription>
         </DrawerDialogHeader>
-        <DrawerDialogFooter className="flex-row justify-end gap-2 pt-4">
+        <DrawerDialogFooter className="gap-2 pt-4">
           <Button
             variant="ghost"
             onClick={() => {
