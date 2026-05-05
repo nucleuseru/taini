@@ -81,7 +81,6 @@ export function FrameSelector({
               ) : startFrames?.length ? (
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   {startFrames.map((frame) => {
-
                     const isSelected = shot.selectedStartFrame === frame._id;
                     return (
                       <div
@@ -140,7 +139,6 @@ export function FrameSelector({
               ) : endFrames?.length ? (
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   {endFrames.map((frame) => {
-
                     const isSelected = shot.selectedEndFrame === frame._id;
                     return (
                       <div

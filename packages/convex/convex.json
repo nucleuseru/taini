@@ -3,5 +3,8 @@
   "functions": "src",
   "codegen": {
     "fileType": "ts"
+  },
+  "aiFiles": {
+    "enabled": false
   }
 }

@@ -1,11 +1,20 @@
+import { Navbar } from "@/components/navbar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
+import { ProjectTabs, ProjectTabsSkeleton } from "../_components/project-tabs";
 import { GenSpace } from "./_components/gen-space";
 import { MediaFeed, MediaFeedSkeleton } from "./_components/media-feed";
 
 export default function GenPage() {
   return (
-    <main className="flex min-h-full w-full flex-col items-center pb-[400px]">
+    <main className="min-h-full pt-16 pb-[400px]">
+      <Navbar
+        CenterComponent={
+          <Suspense fallback={<ProjectTabsSkeleton />}>
+            <ProjectTabs />
+          </Suspense>
+        }
+      />
       <Suspense fallback={<MediaFeedSkeleton />}>
         <MediaFeed />
       </Suspense>
