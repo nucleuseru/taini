@@ -49,3 +49,11 @@ export function AudioActions() {
     </>
   );
 }
+
+export function AudioActionsSkeleton() {
+  return (
+    <Button variant="ghost" size="sm" className="rounded-full">
+      <MoreHorizontalIcon size={20} />
+    </Button>
+  );
+}

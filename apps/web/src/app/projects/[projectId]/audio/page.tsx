@@ -2,7 +2,10 @@ import { Navbar } from "@/components/navbar";
 import { AudioPlayerProvider } from "@/components/ui/audio-player";
 import { Suspense } from "react";
 import { ProjectTabs, ProjectTabsSkeleton } from "../_components/project-tabs";
-import { AudioActions } from "./_components/audio-actions";
+import {
+  AudioActions,
+  AudioActionsSkeleton,
+} from "./_components/audio-actions";
 import { AudioFeed, AudioFeedSkeleton } from "./_components/audio-feed";
 
 export default function AudioPage() {
@@ -14,7 +17,11 @@ export default function AudioPage() {
             <ProjectTabs />
           </Suspense>
         }
-        RightComponent={<AudioActions />}
+        RightComponent={
+          <Suspense fallback={<AudioActionsSkeleton />}>
+            <AudioActions />
+          </Suspense>
+        }
       />
       <Suspense fallback={<AudioFeedSkeleton />}>
         <AudioPlayerProvider>
