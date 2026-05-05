@@ -70,9 +70,33 @@ export interface ElementDetailsContextValue {
   setAddRefModal: (modal: ElementDetailsContextValue["addRefModal"]) => void;
   onMetadataSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
   onAddRefSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
-  handleTriggerInference: () => Promise<void>;
   handleRegenerate: (imageId: Id<"image">) => Promise<void>;
   handleRemoveImage: (imageId: Id<"image">) => Promise<void>;
   handleDeleteElement: () => Promise<void>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  triggerInference: (args: { id: Id<"image"> }) => Promise<unknown>;
+  addRefCharacter: (args: {
+    id: Id<"character">;
+    images: {
+      imageId: Id<"image">;
+      name: string;
+      description?: string | null;
+    }[];
+  }) => Promise<unknown>;
+  addRefEnvironment: (args: {
+    id: Id<"environment">;
+    images: {
+      imageId: Id<"image">;
+      name: string;
+      description?: string | null;
+    }[];
+  }) => Promise<unknown>;
+  addRefItem: (args: {
+    id: Id<"item">;
+    images: {
+      imageId: Id<"image">;
+      name: string;
+      description?: string | null;
+    }[];
+  }) => Promise<unknown>;
 }

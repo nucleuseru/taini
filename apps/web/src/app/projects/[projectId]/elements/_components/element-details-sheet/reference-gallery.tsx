@@ -1,7 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, RefreshCw, Trash2, Upload, Zap } from "lucide-react";
+import {
+  UploadedImage,
+  UploadedImageSelector,
+} from "@/components/uploaded-image-selector";
+import { cn } from "@/lib/utils";
+import { Loader2, Plus, RefreshCw, Trash2, Zap } from "lucide-react";
 import Image from "next/image";
 import { useElementDetails } from "./context";
 
@@ -10,52 +15,65 @@ export function ElementDetailsReferenceGallery() {
     element,
     images,
     loading,
-    handleTriggerInference,
     handleRegenerate,
     handleRemoveImage,
     setSelectedRef,
     setAddRefModal,
     addRefForm,
-    fileInputRef,
-    handleFileChange,
+    projectId,
+    addRefCharacter,
+    addRefEnvironment,
+    addRefItem,
   } = useElementDetails();
 
+  const handleSelectExisting = async (selectedImages: UploadedImage[]) => {
+    if (selectedImages.length === 0) return;
+
+    try {
+      const refData = selectedImages.map((img) => ({
+        imageId: img._id,
+        name: "Uploaded Ref",
+        description: "",
+      }));
+
+      if (element.type === "character") {
+        await addRefCharacter({ id: element._id, images: refData });
+      } else if (element.type === "environment") {
+        await addRefEnvironment({ id: element._id, images: refData });
+      } else {
+        await addRefItem({ id: element._id, images: refData });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
-    <div className="space-y-4 pt-8">
-      <div className="flex items-center justify-between">
-        <div className="text-[10px] font-bold tracking-wider text-[#e5e2e1]/50 uppercase">
-          Reference Images
-        </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => void handleTriggerInference()}
-            disabled={!!loading}
-            className="h-8 gap-2 text-[10px] tracking-wider text-[#efcb61] uppercase hover:bg-[#efcb61]/10"
-          >
-            <Zap size={12} />
-            Generate All
-          </Button>
+    <div className="space-y-6 pt-10">
+      <div className="flex items-center justify-between px-1">
+        <div className="text-[10px] font-bold tracking-[0.2em] text-[#e5e2e1]/30 uppercase">
+          Reference Assets
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3">
         {images?.map((image) => {
           const refMetadata = element.referenceImages.find(
             (r) => r.imageId === image._id,
           );
+          const isPending = image.status === "pending";
+
           return (
             <div
               key={image._id}
-              className="group relative aspect-square overflow-hidden rounded-sm bg-[#131313]"
+              className="group relative aspect-3/4 overflow-hidden rounded-xl bg-[#131313] transition-all hover:ring-2 hover:ring-white/10"
             >
               {image.url ? (
                 <Image
                   src={image.url}
                   alt={refMetadata?.name ?? "Ref"}
                   fill
-                  className="cursor-pointer object-cover transition-transform group-hover:scale-105"
+                  className="cursor-pointer object-cover transition-transform duration-500 group-hover:scale-110"
                   onClick={() => {
                     setSelectedRef({
                       imageId: image._id,
@@ -66,94 +84,102 @@ export function ElementDetailsReferenceGallery() {
                   }}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  {image.status === "pending" ? (
-                    <div className="text-[10px] tracking-wider text-[#e5e2e1]/30 uppercase">
-                      Pending
-                    </div>
-                  ) : (
-                    <Loader2
-                      size={24}
-                      className="animate-spin text-[#353534]"
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#1a1a1a]">
+                  {isPending ? (
+                    <Zap
+                      size={20}
+                      className="animate-pulse text-[#efcb61]/40"
                     />
+                  ) : (
+                    <Loader2 size={20} className="animate-spin text-white/10" />
                   )}
+                  <span className="text-[8px] font-bold tracking-widest text-white/20 uppercase">
+                    {isPending ? "Pending" : "Processing"}
+                  </span>
                 </div>
               )}
 
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => void handleRegenerate(image._id)}
-                  disabled={!!loading}
-                  className="h-8 w-8 bg-black/40 text-[#e5e2e1] backdrop-blur-sm transition-all hover:bg-[#2a2a2a] hover:text-[#efcb61]"
-                >
-                  <RefreshCw
-                    size={14}
-                    className={
-                      loading === `regenerate-${image._id}`
-                        ? "animate-spin"
-                        : ""
-                    }
-                  />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => void handleRemoveImage(image._id)}
-                  disabled={!!loading}
-                  className="h-8 w-8 bg-black/40 text-red-500/80 backdrop-blur-sm transition-all hover:bg-red-500/10 hover:text-red-500"
-                >
-                  <Trash2 size={14} />
-                </Button>
+              {/* Hover Actions */}
+              <div className="absolute inset-x-0 bottom-0 flex translate-y-2 flex-col gap-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                <div className="mb-1 truncate text-[10px] font-bold tracking-wide text-white">
+                  {refMetadata?.name ?? "Untitled"}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleRegenerate(image._id);
+                    }}
+                    disabled={!!loading}
+                    className="h-8 w-8 rounded-lg bg-white/5 text-white/60 backdrop-blur-md transition-all hover:bg-white/20 hover:text-[#efcb61]"
+                  >
+                    <RefreshCw
+                      size={12}
+                      className={cn(
+                        loading === `regenerate-${image._id}` && "animate-spin",
+                      )}
+                    />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleRemoveImage(image._id);
+                    }}
+                    disabled={!!loading}
+                    className="h-8 w-8 rounded-lg bg-red-500/10 text-red-400 backdrop-blur-md transition-all hover:bg-red-500/20 hover:text-red-300"
+                  >
+                    <Trash2 size={12} />
+                  </Button>
+                </div>
               </div>
-
-              {refMetadata?.name && (
-                <div className="absolute inset-x-0 bottom-0 bg-black/60 p-2 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                  <div className="truncate text-[10px] font-medium text-[#e5e2e1]">
-                    {refMetadata.name}
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
 
-        <div className="flex aspect-square flex-col gap-2">
+        <Button
+          variant="ghost"
+          className="flex aspect-3/4 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/5 bg-white/2 transition-all hover:border-white/10 hover:bg-white/5 hover:text-[#efcb61]"
+          onClick={() => {
+            setAddRefModal({ type: "generate" });
+            addRefForm.reset({
+              name: "Reference Concept",
+              description: "",
+            });
+          }}
+          disabled={!!loading}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 shadow-inner transition-transform group-hover:scale-110">
+            <Plus size={18} />
+          </div>
+          <span className="text-[10px] font-bold tracking-[0.2em] uppercase">
+            Generate
+          </span>
+        </Button>
+
+        <UploadedImageSelector
+          projectId={projectId}
+          selectedImages={[]}
+          onSelect={(imgs) => void handleSelectExisting(imgs)}
+          maxSelection={5}
+          label="Library Assets"
+        >
           <Button
             variant="ghost"
-            className="flex flex-1 flex-col items-center justify-center gap-2 border border-dashed border-[#353534] bg-[#131313]/50 transition-all hover:bg-[#131313] hover:text-[#efcb61]"
-            onClick={() => {
-              setAddRefModal({ type: "generate" });
-              addRefForm.reset({
-                name: "Generated Ref",
-                description: "",
-              });
-            }}
+            className="flex aspect-3/4 w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/5 bg-white/2 transition-all hover:border-white/10 hover:bg-white/5 hover:text-[#efcb61]"
             disabled={!!loading}
           >
-            <Plus size={16} />
-            <span className="text-[10px] tracking-wider uppercase">
-              New Gen
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 shadow-inner transition-transform group-hover:scale-110">
+              <Plus size={18} />
+            </div>
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase">
+              Library
             </span>
           </Button>
-          <Button
-            variant="ghost"
-            className="flex flex-1 flex-col items-center justify-center gap-2 border border-dashed border-[#353534] bg-[#131313]/50 transition-all hover:bg-[#131313] hover:text-[#efcb61]"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={!!loading}
-          >
-            <Upload size={16} />
-            <span className="text-[10px] tracking-wider uppercase">Upload</span>
-          </Button>
-          <input
-            type="file"
-            className="hidden"
-            ref={fileInputRef}
-            accept="image/*"
-            onChange={handleFileChange}
-          />
-        </div>
+        </UploadedImageSelector>
       </div>
     </div>
   );

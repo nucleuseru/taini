@@ -7,16 +7,15 @@ export default function ProjectLayout({
 }: LayoutProps<"/projects/[projectId]">) {
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <Suspense fallback={<ProjectTabsSkeleton />}>
-        <ProjectTabs />
-      </Suspense>
+      <Navbar
+        CenterComponent={
+          <Suspense fallback={<ProjectTabsSkeleton />}>
+            <ProjectTabs />
+          </Suspense>
+        }
+      />
 
-      <main className="mx-auto w-full max-w-screen-2xl flex-1 p-6">
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-          {children}
-        </div>
-      </main>
+      <main className="mx-auto w-full flex-1 pt-16">{children}</main>
     </div>
   );
 }

@@ -76,7 +76,7 @@ export const clone = authMutation({
   handler: async (ctx, args) => {
     const voiceId = await ctx.db.insert("voice", {
       ...args,
-      status: "pending",
+      status: "queued",
     });
 
     return { voiceId };
@@ -112,11 +112,7 @@ export const remove = authMutation({
 export const triggerInference = authMutation({
   args: { id: v.id("voice") },
   handler: async (ctx, args) => {
-    const voice = await ctx.db.get(args.id);
-
-    if (!voice?.storageId) {
-      await ctx.db.patch(args.id, { status: "queued" });
-    }
+    await ctx.db.patch(args.id, { status: "queued" });
   },
 });
 
@@ -146,8 +142,9 @@ export const update = internalMutation({
 export const inference = internalAction({
   args: {
     id: v.id("voice"),
-    ref_text: v.string(),
     ref_audio: v.string(),
+    ref_text: v.optional(v.string()),
+    x_vector_only_mode: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { id: voiceId, ...input } = args;
@@ -211,8 +208,13 @@ export const webhook = httpAction(async (ctx, request) => {
 });
 
 triggers.register("voice", async (ctx, change) => {
-  if (change.operation !== "update") return;
+  if (change.operation === "delete") return;
   if (change.newDoc.status !== "queued") return;
+
+  if (change.newDoc.storageId) {
+    await ctx.db.patch(change.id, { status: "completed" });
+    return;
+  }
 
   const audio = change.newDoc.referenceAudio
     ? await ctx.db.get("audio", change.newDoc.referenceAudio)
@@ -222,13 +224,14 @@ triggers.register("voice", async (ctx, change) => {
     ? await ctx.storage.getUrl(audio.storageId)
     : null;
 
-  if (audio?.text && audioUrl) {
+  if (audioUrl) {
     await ctx.scheduler.runAfter(0, internal.voice.inference, {
       id: change.id,
-      ref_text: audio.text,
       ref_audio: audioUrl,
+      x_vector_only_mode: !audio?.text,
+      ref_text: audio?.text ?? undefined,
     });
   } else {
-    await ctx.db.patch(change.id, { status: "pending" });
+    await ctx.db.patch(change.id, { status: "failed" });
   }
 });

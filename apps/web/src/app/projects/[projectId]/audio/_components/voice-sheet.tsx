@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -37,13 +38,16 @@ export function VoiceSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[400px] border-none bg-[#1a1a1a] text-[#e5e2e1] shadow-2xl sm:w-[540px]">
+      <SheetContent className="w-full max-w-[400px] border-none bg-[#1a1a1a] text-[#e5e2e1] shadow-2xl sm:max-w-[540px]">
         <SheetHeader>
           <SheetTitle className="font-headline text-2xl tracking-tight text-[#e5e2e1]">
             Voice Library
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            All voice prompts used to generate audio
+          </SheetDescription>
         </SheetHeader>
-        <div className="custom-scrollbar mt-8 flex max-h-[calc(100vh-120px)] flex-col gap-3 overflow-y-auto pr-2">
+        <div className="custom-scrollbar mt-8 flex max-h-[calc(100vh-120px)] flex-col gap-3 overflow-y-auto">
           {voices
             ? voices.page.map((voice) => (
                 <VoiceCard
@@ -125,61 +129,62 @@ function VoiceCard({
   return (
     <div
       className={cn(
-        "group relative flex cursor-pointer items-center justify-between rounded-lg bg-[#242423] p-3 transition-all duration-200 hover:bg-[#2a2a29]",
-        isSelected && "bg-[#2a2a29] ring-1 ring-[#efcb61]",
+        "group relative flex cursor-pointer items-center justify-between border-b border-white/2 p-3.5 transition-all duration-200 hover:bg-white/2",
+        isSelected && "bg-white/4 px-4",
       )}
       onClick={onSelect}
     >
       <div className="flex items-center gap-4">
-        <div className="relative flex h-12 w-12 items-center justify-center rounded-lg bg-[#131313] shadow-inner transition-transform group-hover:scale-105">
+        <div className="relative flex h-10 w-10 items-center justify-center rounded-md bg-white/3 transition-colors group-hover:bg-white/6">
           {voice.url ? (
             <Button
               size="icon"
               variant="ghost"
-              className="h-full w-full rounded-lg text-[#e5e2e1] hover:bg-transparent"
+              className="h-full w-full rounded-md text-[#e5e2e1] hover:bg-transparent"
               onClick={togglePlay}
             >
               {isPlaying ? (
-                <PauseIcon size={20} fill="currentColor" />
+                <PauseIcon size={16} fill="currentColor" />
               ) : (
-                <PlayIcon size={20} fill="currentColor" className="ml-1" />
+                <PlayIcon size={16} fill="currentColor" className="ml-0.5" />
               )}
             </Button>
           ) : (
-            <MusicIcon size={20} className="text-muted-foreground opacity-50" />
+            <MusicIcon size={16} className="text-muted-foreground opacity-30" />
           )}
         </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold tracking-tight text-[#e5e2e1]">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium tracking-tight text-[#e5e2e1]/90">
             {voice.name}
           </span>
-          <span
-            className={cn(
-              "text-[10px] font-bold tracking-widest uppercase",
-              voice.status === "completed"
-                ? "text-[#efcb61]/70"
-                : "text-muted-foreground opacity-50",
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "text-[9px] font-bold tracking-widest uppercase opacity-40",
+                voice.status === "completed" && "text-[#efcb61] opacity-70",
+              )}
+            >
+              {voice.status}
+            </span>
+            {isSelected && (
+              <span className="h-1 w-1 rounded-full bg-[#efcb61]" />
             )}
-          >
-            {voice.status}
-          </span>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5 pr-2">
         {isSelected && (
-          <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#efcb61]/10">
-            <CheckIcon size={14} className="text-[#efcb61]" />
-          </div>
+          <CheckIcon size={12} className="text-[#efcb61] opacity-80" />
         )}
         <Button
           size="icon"
           variant="ghost"
-          className="text-muted-foreground h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+          className="h-7 w-7 text-white/20 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
           disabled={isRemoving}
           onClick={onDelete}
         >
-          <Trash2Icon size={14} />
+          <Trash2Icon size={12} />
         </Button>
       </div>
     </div>

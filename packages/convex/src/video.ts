@@ -24,6 +24,7 @@ export const GenerateVideoArgsValidator = v.object({
   prompt: v.string(),
   width: VideoFields.width,
   height: VideoFields.height,
+  status: VideoFields.status,
   duration: VideoFields.duration,
   projectId: VideoFields.projectId,
   frameRate: VideoFields.frameRate,
@@ -72,7 +73,7 @@ export const generateVideoHandler = async (
 ) => {
   const videoId = await ctx.db.insert("video", {
     ...options,
-    status: "pending",
+    status: options.status ?? "pending",
     seed: generateRandomInt(4_000_000_000),
   });
 
@@ -119,11 +120,7 @@ export const remove = authMutation({
 export const triggerInference = authMutation({
   args: { id: v.id("video") },
   handler: async (ctx, args) => {
-    const video = await ctx.db.get(args.id);
-
-    if (!video?.storageId) {
-      await ctx.db.patch(args.id, { status: "queued" });
-    }
+    await ctx.db.patch(args.id, { status: "queued" });
   },
 });
 
@@ -225,11 +222,16 @@ export const webhook = httpAction(async (ctx, request) => {
 });
 
 triggers.register("video", async (ctx, change) => {
-  if (change.operation !== "update") return;
+  if (change.operation === "delete") return;
   if (change.newDoc.status !== "queued") return;
 
   if (!change.newDoc.prompt?.trim()) {
-    await ctx.db.patch(change.id, { status: "pending" });
+    await ctx.db.patch(change.id, { status: "failed" });
+    return;
+  }
+
+  if (change.newDoc.storageId) {
+    await ctx.db.patch(change.id, { status: "completed" });
     return;
   }
 
