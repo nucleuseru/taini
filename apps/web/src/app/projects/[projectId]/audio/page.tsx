@@ -1,17 +1,28 @@
+import { Navbar } from "@/components/navbar";
+import { AudioPlayerProvider } from "@/components/ui/audio-player";
 import { Suspense } from "react";
-import {
-  AudioContainer,
-  AudioContainerSkeleton,
-} from "./_components/audio-container";
+import { ProjectTabs, ProjectTabsSkeleton } from "../_components/project-tabs";
+import { AudioActions } from "./_components/audio-actions";
+import { AudioFeed, AudioFeedSkeleton } from "./_components/audio-feed";
 
 export default function AudioPage() {
   return (
-    <main className="flex min-h-full w-full flex-col items-center pb-[400px]">
-      <Suspense fallback={<AudioContainerSkeleton />}>
-        <AudioContainer />
+    <main className="min-h-full pt-16 pb-24">
+      <Navbar
+        CenterComponent={
+          <Suspense fallback={<ProjectTabsSkeleton />}>
+            <ProjectTabs />
+          </Suspense>
+        }
+        RightComponent={<AudioActions />}
+      />
+      <Suspense fallback={<AudioFeedSkeleton />}>
+        <AudioPlayerProvider>
+          <Suspense fallback={<AudioFeedSkeleton />}>
+            <AudioFeed />
+          </Suspense>
+        </AudioPlayerProvider>
       </Suspense>
-
-      <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-40 h-96 bg-linear-to-t from-black via-black/80 to-transparent" />
     </main>
   );
 }

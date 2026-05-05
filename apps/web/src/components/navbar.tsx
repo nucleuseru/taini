@@ -21,9 +21,14 @@ import { Skeleton } from "./ui/skeleton";
 export interface NavbarProps {
   LeftComponent?: React.ReactNode;
   CenterComponent?: React.ReactNode;
+  RightComponent?: React.ReactNode;
 }
 
-export function Navbar({ LeftComponent, CenterComponent }: NavbarProps) {
+export function Navbar({
+  LeftComponent,
+  CenterComponent,
+  RightComponent,
+}: NavbarProps) {
   const isMobile = useIsMobile();
   const { data, isPending } = authClient.useSession();
 
@@ -93,6 +98,7 @@ export function Navbar({ LeftComponent, CenterComponent }: NavbarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+      {RightComponent}
     </nav>
   );
 }

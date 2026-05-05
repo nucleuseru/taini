@@ -1,5 +1,6 @@
 "use client";
 
+import { AudioPlayerButton } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -11,26 +12,26 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { api } from "@repo/convex/api";
-import { Doc } from "@repo/convex/dataModel";
-import { useQuery } from "convex/react";
-import {
-  CheckIcon,
-  MusicIcon,
-  PauseIcon,
-  PlayIcon,
-  Trash2Icon,
-} from "lucide-react";
-import { useState } from "react";
-import { useAudio } from "./context";
+import { Doc, Id } from "@repo/convex/dataModel";
+import { useMutation, useQuery } from "convex/react";
+import { CheckIcon, MusicIcon, Trash2Icon } from "lucide-react";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 export function VoiceSheet({
   open,
   onOpenChange,
+  selectedVoiceId,
+  onSelect,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  selectedVoiceId?: Id<"voice"> | null;
+  onSelect: (voice: Doc<"voice">) => void;
 }) {
-  const { projectId, selectedVoiceId, setSelectedVoiceId } = useAudio();
+  const params = useParams();
+  const projectId = params.projectId as Id<"project">;
+
   const voices = useQuery(api.voice.list, {
     projectId,
     paginationOpts: { numItems: 100, cursor: null },
@@ -55,7 +56,7 @@ export function VoiceSheet({
                   voice={voice}
                   isSelected={selectedVoiceId === voice._id}
                   onSelect={() => {
-                    setSelectedVoiceId(voice._id);
+                    onSelect(voice);
                     onOpenChange(false);
                   }}
                 />
@@ -90,40 +91,16 @@ function VoiceCard({
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const { handleRemoveVoice, loading } = useAudio();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
-    null,
-  );
+  const removeVoice = useMutation(api.voice.remove);
 
-  const isRemoving = loading === "remove-voice";
-
-  const togglePlay = (e: React.MouseEvent) => {
+  const onDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!voice.url) return;
-
-    if (!audioElement) {
-      const el = new Audio(voice.url);
-      el.onended = () => {
-        setIsPlaying(false);
-      };
-      void el.play();
-      setAudioElement(el);
-      setIsPlaying(true);
-    } else {
-      if (isPlaying) {
-        audioElement.pause();
-        setIsPlaying(false);
-      } else {
-        void audioElement.play();
-        setIsPlaying(true);
-      }
+    try {
+      await removeVoice({ id: voice._id });
+      toast.success("Voice removed");
+    } catch (error) {
+      toast.error("Failed to remove voice");
     }
-  };
-
-  const onDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    void handleRemoveVoice(voice._id);
   };
 
   return (
@@ -137,18 +114,15 @@ function VoiceCard({
       <div className="flex items-center gap-4">
         <div className="relative flex h-10 w-10 items-center justify-center rounded-md bg-white/3 transition-colors group-hover:bg-white/6">
           {voice.url ? (
-            <Button
-              size="icon"
+            <AudioPlayerButton
               variant="ghost"
+              size="icon"
               className="h-full w-full rounded-md text-[#e5e2e1] hover:bg-transparent"
-              onClick={togglePlay}
-            >
-              {isPlaying ? (
-                <PauseIcon size={16} fill="currentColor" />
-              ) : (
-                <PlayIcon size={16} fill="currentColor" className="ml-0.5" />
-              )}
-            </Button>
+              item={{ id: voice._id, src: voice.url }}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            />
           ) : (
             <MusicIcon size={16} className="text-muted-foreground opacity-30" />
           )}
@@ -181,7 +155,6 @@ function VoiceCard({
           size="icon"
           variant="ghost"
           className="h-7 w-7 text-white/20 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
-          disabled={isRemoving}
           onClick={onDelete}
         >
           <Trash2Icon size={12} />

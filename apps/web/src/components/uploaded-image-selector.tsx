@@ -87,6 +87,7 @@ export function UploadedImageSelector({
     } else {
       if (maxSelection === 1) {
         onSelect([images.find((image) => image._id === id) as UploadedImage]);
+        setOpen(false);
       } else if (selectedIds.length < maxSelection) {
         onSelect([
           ...selectedIds,

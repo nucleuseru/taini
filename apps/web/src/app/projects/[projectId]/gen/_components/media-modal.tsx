@@ -7,7 +7,12 @@ import {
   DrawerDialogTitle,
 } from "@/components/ui/drawer-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@repo/convex/api";
+import { useMutation } from "convex/react";
+import { DownloadIcon, Loader2Icon, SparklesIcon } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Media } from "./media-feed";
 
 export interface MediaModelProps {
@@ -16,6 +21,26 @@ export interface MediaModelProps {
 }
 
 export function MediaModal({ media, onClose }: MediaModelProps) {
+  const triggerImageInference = useMutation(api.image.triggerInference);
+  const triggerVideoInference = useMutation(api.video.triggerInference);
+  const [isTriggering, setIsTriggering] = useState(false);
+
+  const onTrigger = async () => {
+    setIsTriggering(true);
+    try {
+      if (media.type === "image") {
+        await triggerImageInference({ id: media._id });
+      } else {
+        await triggerVideoInference({ id: media._id });
+      }
+      toast.success("Inference triggered");
+    } catch {
+      toast.error("Failed to trigger inference");
+    } finally {
+      setIsTriggering(false);
+    }
+  };
+
   return (
     <DrawerDialog
       open={!!media}
@@ -104,18 +129,27 @@ export function MediaModal({ media, onClose }: MediaModelProps) {
 
             <div className="mt-auto flex flex-col gap-2">
               {media.url && (
-                <Button
-                  className="justify-start gap-2 text-[#e5e2e1] hover:bg-[#2a2a2a] hover:text-[#efcb61]"
-                  variant="ghost"
-                  asChild
-                >
+                <Button variant="ghost" asChild>
                   <a href={media.url} download={`${media.type}-${media._id}`}>
-                    <span className="opacity-50">⬇️</span> Download
+                    <DownloadIcon /> Download
                   </a>
                 </Button>
               )}
 
-              {/* TODO: Button to trigger inference if image/video status is pending */}
+              {!media.url && media.status !== "completed" && (
+                <Button
+                  variant="ghost"
+                  disabled={isTriggering}
+                  onClick={() => void onTrigger()}
+                >
+                  {isTriggering ? (
+                    <Loader2Icon size={14} className="animate-spin" />
+                  ) : (
+                    <SparklesIcon size={14} className="opacity-50" />
+                  )}
+                  Trigger Inference
+                </Button>
+              )}
             </div>
           </div>
         </div>

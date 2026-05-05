@@ -1,5 +1,6 @@
 "use client";
 
+import { AudioPlayerButton } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -116,6 +117,7 @@ export function UploadedAudioSelector({
     } else {
       if (maxSelection === 1) {
         onSelect([audios.find((audio) => audio._id === id) as UploadedAudio]);
+        setOpen(false);
       } else if (selectedItems.length < maxSelection) {
         onSelect([
           ...selectedItems,
@@ -230,7 +232,7 @@ export function UploadedAudioSelector({
           ) : (
             <div className="flex flex-col gap-1">
               {audios.map((audio) => (
-                <button
+                <div
                   key={audio._id}
                   onClick={() => {
                     toggleSelection(audio._id);
@@ -242,9 +244,12 @@ export function UploadedAudioSelector({
                       : "hover:bg-muted",
                   )}
                 >
-                  <div className="bg-muted flex size-8 shrink-0 items-center justify-center rounded">
-                    <MusicIcon size={14} className="text-muted-foreground" />
-                  </div>
+                  <AudioPlayerButton
+                    item={{ id: audio._id, src: audio.url ?? "" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  />
                   <div className="flex flex-col overflow-hidden">
                     <span className="truncate text-xs font-medium">
                       {audio.title ?? "Untitled"}
@@ -253,7 +258,7 @@ export function UploadedAudioSelector({
                       {new Date(audio._creationTime).toLocaleDateString()}
                     </span>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
