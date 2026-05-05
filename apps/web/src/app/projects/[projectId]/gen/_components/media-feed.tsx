@@ -50,7 +50,7 @@ export function MediaFeed() {
 
   return (
     <>
-      <div className="grid w-full max-w-[1400px] grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 lg:px-8 xl:grid-cols-4">
+      <div className="grid w-full grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 lg:px-8 xl:grid-cols-4">
         {medias.map((media) => (
           <div
             key={media._id}
@@ -113,7 +113,7 @@ export function MediaFeed() {
 
 export function MediaFeedSkeleton() {
   return (
-    <div className="grid w-full max-w-[1400px] grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 lg:px-8 xl:grid-cols-4">
+    <div className="grid w-full grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 lg:px-8 xl:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
         <Skeleton key={i} className="bg-card aspect-video" />
       ))}

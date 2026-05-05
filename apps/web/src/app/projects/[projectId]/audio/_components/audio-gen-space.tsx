@@ -25,14 +25,9 @@ export function AudioGenSpace() {
   const projectId = params.projectId as Id<"project">;
 
   const {
-    activeTab,
-    setActiveTab,
-    text,
-    setText,
     voiceName,
     setVoiceName,
     selectedVoice,
-    loading,
     isSheetOpen,
     setIsSheetOpen,
     handleGenerate,
@@ -40,8 +35,6 @@ export function AudioGenSpace() {
     setSelectedRefAudioId,
     selectedAudio,
   } = useAudio();
-
-  const isPending = loading === "generate" || loading === "clone";
 
   return (
     <div className="bg-card/80 flex flex-col gap-4 rounded-2xl border border-white/5 p-4 shadow-2xl backdrop-blur-2xl">

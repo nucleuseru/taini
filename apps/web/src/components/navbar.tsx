@@ -18,16 +18,22 @@ import { Bolt, BoltIcon, Coins, CoinsIcon, LogOutIcon } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "./ui/skeleton";
 
-export function Navbar() {
+export interface NavbarProps {
+  LeftComponent?: React.ReactNode;
+  CenterComponent?: React.ReactNode;
+}
+
+export function Navbar({ LeftComponent, CenterComponent }: NavbarProps) {
   const isMobile = useIsMobile();
   const { data, isPending } = authClient.useSession();
 
   return (
-    <nav className="bg-background/50 fixed inset-x-0 top-0 z-50 flex items-center gap-6 px-6 py-4 backdrop-blur-md">
+    <nav className="bg-background/50 fixed inset-x-0 top-0 z-50 flex items-center gap-2 px-4 py-4 backdrop-blur-md sm:gap-4 sm:px-6 lg:gap-6">
+      {LeftComponent}
       <Link href="/" className="mr-auto">
-        <h1 className="text-xl font-bold tracking-tighter">TAINI</h1>
+        <h1 className="text-lg font-bold tracking-tighter sm:text-xl">TAINI</h1>
       </Link>
-
+      {CenterComponent}
       <div className="hidden items-center gap-4 md:flex">
         <Badge
           variant="outline"
