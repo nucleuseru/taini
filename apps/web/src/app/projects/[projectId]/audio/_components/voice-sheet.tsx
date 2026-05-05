@@ -69,7 +69,7 @@ export function VoiceSheet({
               ))}
 
           {voices?.page.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center opacity-50">
+            <div className="flex flex-col items-center justify-center px-4 py-12 text-center opacity-50">
               <MusicIcon size={32} className="mb-4 opacity-20" />
               <p className="text-sm">
                 No voices found. Clone one to get started.
@@ -154,7 +154,7 @@ function VoiceCard({
         <Button
           size="icon"
           variant="ghost"
-          className="h-7 w-7 text-white/20 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+          className="h-7 w-7 text-red-400"
           onClick={onDelete}
         >
           <Trash2Icon size={12} />

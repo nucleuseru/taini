@@ -11,25 +11,25 @@ import { AudioFeed, AudioFeedSkeleton } from "./_components/audio-feed";
 export default function AudioPage() {
   return (
     <main className="min-h-full pt-16 pb-24">
-      <Navbar
-        CenterComponent={
-          <Suspense fallback={<ProjectTabsSkeleton />}>
-            <ProjectTabs />
-          </Suspense>
-        }
-        RightComponent={
-          <Suspense fallback={<AudioActionsSkeleton />}>
-            <AudioActions />
-          </Suspense>
-        }
-      />
-      <Suspense fallback={<AudioFeedSkeleton />}>
-        <AudioPlayerProvider>
+      <AudioPlayerProvider>
+        <Navbar
+          CenterComponent={
+            <Suspense fallback={<ProjectTabsSkeleton />}>
+              <ProjectTabs />
+            </Suspense>
+          }
+          RightComponent={
+            <Suspense fallback={<AudioActionsSkeleton />}>
+              <AudioActions />
+            </Suspense>
+          }
+        />
+        <Suspense fallback={<AudioFeedSkeleton />}>
           <Suspense fallback={<AudioFeedSkeleton />}>
             <AudioFeed />
           </Suspense>
-        </AudioPlayerProvider>
-      </Suspense>
+        </Suspense>
+      </AudioPlayerProvider>
     </main>
   );
 }

@@ -42,18 +42,21 @@ export function ProjectCreationDialog() {
         </Button>
       </DrawerDialogTrigger>
       <DrawerDialogContent>
-        <form onSubmit={(e) => void onSubmit(e)} className="px-4">
-          <DrawerDialogHeader>
-            <DrawerDialogTitle>Create New Project</DrawerDialogTitle>
-            <DrawerDialogDescription>
-              Give your project a name to get started with your film production.
-            </DrawerDialogDescription>
-          </DrawerDialogHeader>
+        <DrawerDialogHeader>
+          <DrawerDialogTitle>Create New Project</DrawerDialogTitle>
+          <DrawerDialogDescription>
+            Give your project a name to get started with your film production.
+          </DrawerDialogDescription>
+        </DrawerDialogHeader>
+        <form onSubmit={(e) => void onSubmit(e)}>
           <Controller
             name="name"
             control={form.control}
             render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid} className="py-4">
+              <Field
+                data-invalid={fieldState.invalid}
+                className="px-4 pb-4 md:px-0"
+              >
                 <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
                 <Input
                   {...field}

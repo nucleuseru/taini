@@ -60,7 +60,7 @@ export function Navbar({
       ) : (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className="ring-offset-background hover:ring-primary/20 size-9 cursor-pointer transition-all hover:ring-2 active:scale-95">
+            <Avatar className="ring-offset-background hover:ring-primary/20 size-8 cursor-pointer transition-all hover:ring-2 active:scale-95">
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                 {getInitials(data?.user.name ?? "")}
               </AvatarFallback>

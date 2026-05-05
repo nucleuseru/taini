@@ -46,7 +46,7 @@ export function ProjectTabs() {
           variant="ghost"
           className={cn(
             "text-muted-foreground hover:text-foreground hover:bg-muted flex-1 text-xs lg:text-sm",
-            activeTab === tab.href && "text-foreground bg-muted",
+            activeTab === tab.href && "text-primary bg-muted",
           )}
           key={tab.href}
           asChild
