@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
 import {
-  DrawerDialog,
-  DrawerDialogContent,
-  DrawerDialogDescription,
-  DrawerDialogTitle,
-} from "@/components/ui/drawer-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { api } from "@repo/convex/api";
@@ -79,7 +79,9 @@ export function AudioFeed() {
 
       <AudioDetailsDrawer
         audio={selectedAudio}
-        onOpenChange={(open) => !open && setSelectedAudio(null)}
+        onOpenChange={(open) => {
+          if(!open) setSelectedAudio(null);
+        }}
       />
     </>
   );
@@ -180,17 +182,17 @@ function AudioDetailsDrawer({
   };
 
   return (
-    <DrawerDialog open={!!audio} onOpenChange={onOpenChange}>
-      <DrawerDialogContent className="max-w-2xl border-none bg-[#1a1a1a] p-0 text-[#e5e2e1]">
+    <Dialog open={!!audio} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl border-none bg-[#1a1a1a] p-0 text-[#e5e2e1]">
         {audio && (
           <div className="flex flex-col">
             <div className="p-6 pb-0">
-              <DrawerDialogTitle className="font-headline text-2xl font-bold tracking-tight">
+              <DialogTitle className="font-headline text-2xl font-bold tracking-tight">
                 {audio.title ?? "Audio Details"}
-              </DrawerDialogTitle>
-              <DrawerDialogDescription className="text-muted-foreground mt-1 text-sm opacity-50">
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground mt-1 text-sm opacity-50">
                 Created on {new Date(audio._creationTime).toLocaleString()}
-              </DrawerDialogDescription>
+              </DialogDescription>
             </div>
 
             <div className="p-6">
@@ -278,8 +280,8 @@ function AudioDetailsDrawer({
             </div>
           </div>
         )}
-      </DrawerDialogContent>
-    </DrawerDialog>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  DrawerDialog,
-  DrawerDialogContent,
-  DrawerDialogDescription,
-  DrawerDialogFooter,
-  DrawerDialogHeader,
-  DrawerDialogTitle,
-} from "@/components/ui/drawer-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,14 +74,14 @@ export function TTSForm({ open, onOpenChange }: TTSFormProps) {
 
   return (
     <>
-      <DrawerDialog open={open} onOpenChange={onOpenChange}>
-        <DrawerDialogContent className="md:max-w-xl">
-          <DrawerDialogHeader>
-            <DrawerDialogTitle>Generate Speech</DrawerDialogTitle>
-            <DrawerDialogDescription>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="md:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Generate Speech</DialogTitle>
+            <DialogDescription>
               Convert your script into high-quality audio using AI voices.
-            </DrawerDialogDescription>
-          </DrawerDialogHeader>
+            </DialogDescription>
+          </DialogHeader>
 
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4 px-4 md:px-0">
@@ -138,7 +138,7 @@ export function TTSForm({ open, onOpenChange }: TTSFormProps) {
               )}
             />
 
-            <DrawerDialogFooter>
+            <DialogFooter>
               <Button
                 type="button"
                 variant="ghost"
@@ -156,10 +156,10 @@ export function TTSForm({ open, onOpenChange }: TTSFormProps) {
                 )}
                 Generate Audio
               </Button>
-            </DrawerDialogFooter>
+            </DialogFooter>
           </form>
-        </DrawerDialogContent>
-      </DrawerDialog>
+        </DialogContent>
+      </Dialog>
 
       <VoiceSheet
         open={isSheetOpen}

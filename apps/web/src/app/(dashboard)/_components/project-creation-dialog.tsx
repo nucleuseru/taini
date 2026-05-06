@@ -2,15 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  DrawerDialog,
-  DrawerDialogClose,
-  DrawerDialogContent,
-  DrawerDialogDescription,
-  DrawerDialogFooter,
-  DrawerDialogHeader,
-  DrawerDialogTitle,
-  DrawerDialogTrigger,
-} from "@/components/ui/drawer-dialog";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { CreateProjectFormSchema } from "@/lib/schema";
@@ -34,29 +34,26 @@ export function ProjectCreationDialog() {
   });
 
   return (
-    <DrawerDialog>
-      <DrawerDialogTrigger asChild>
+    <Dialog>
+      <DialogTrigger asChild>
         <Button variant="outline" size="lg" className="w-full">
           <Plus className="size-4" />
           New Project
         </Button>
-      </DrawerDialogTrigger>
-      <DrawerDialogContent>
-        <DrawerDialogHeader>
-          <DrawerDialogTitle>Create New Project</DrawerDialogTitle>
-          <DrawerDialogDescription>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New Project</DialogTitle>
+          <DialogDescription>
             Give your project a name to get started with your film production.
-          </DrawerDialogDescription>
-        </DrawerDialogHeader>
+          </DialogDescription>
+        </DialogHeader>
         <form onSubmit={(e) => void onSubmit(e)}>
           <Controller
             name="name"
             control={form.control}
             render={({ field, fieldState }) => (
-              <Field
-                data-invalid={fieldState.invalid}
-                className="px-4 pb-4 md:px-0"
-              >
+              <Field data-invalid={fieldState.invalid} className="pb-4">
                 <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
                 <Input
                   {...field}
@@ -72,8 +69,8 @@ export function ProjectCreationDialog() {
               </Field>
             )}
           />
-          <DrawerDialogFooter>
-            <DrawerDialogClose asChild>
+          <DialogFooter>
+            <DialogClose asChild>
               <Button
                 type="button"
                 variant="ghost"
@@ -81,16 +78,16 @@ export function ProjectCreationDialog() {
               >
                 Cancel
               </Button>
-            </DrawerDialogClose>
+            </DialogClose>
             <Button disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting && (
                 <Loader2 className="size-4 animate-spin" />
               )}
               <span>Create Project</span>
             </Button>
-          </DrawerDialogFooter>
+          </DialogFooter>
         </form>
-      </DrawerDialogContent>
-    </DrawerDialog>
+      </DialogContent>
+    </Dialog>
   );
 }

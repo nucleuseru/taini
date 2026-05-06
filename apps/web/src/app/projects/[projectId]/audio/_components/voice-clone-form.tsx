@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  DrawerDialog,
-  DrawerDialogContent,
-  DrawerDialogDescription,
-  DrawerDialogFooter,
-  DrawerDialogHeader,
-  DrawerDialogTitle,
-} from "@/components/ui/drawer-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -70,14 +70,14 @@ export function VoiceCloneForm({ open, onOpenChange }: VoiceCloneFormProps) {
   });
 
   return (
-    <DrawerDialog open={open} onOpenChange={onOpenChange}>
-      <DrawerDialogContent className="md:max-w-xl">
-        <DrawerDialogHeader>
-          <DrawerDialogTitle>Clone a Voice</DrawerDialogTitle>
-          <DrawerDialogDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="md:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Clone a Voice</DialogTitle>
+          <DialogDescription>
             Create a custom voice by providing a short reference audio sample.
-          </DrawerDialogDescription>
-        </DrawerDialogHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 md:px-0">
@@ -125,7 +125,7 @@ export function VoiceCloneForm({ open, onOpenChange }: VoiceCloneFormProps) {
             </UploadedAudioSelector>
           </div>
 
-          <DrawerDialogFooter>
+          <DialogFooter>
             <Button
               type="button"
               variant="ghost"
@@ -143,9 +143,9 @@ export function VoiceCloneForm({ open, onOpenChange }: VoiceCloneFormProps) {
               )}
               Start Cloning
             </Button>
-          </DrawerDialogFooter>
+          </DialogFooter>
         </form>
-      </DrawerDialogContent>
-    </DrawerDialog>
+      </DialogContent>
+    </Dialog>
   );
 }

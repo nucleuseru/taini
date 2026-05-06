@@ -2,14 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  DrawerDialog,
-  DrawerDialogContent,
-  DrawerDialogDescription,
-  DrawerDialogFooter,
-  DrawerDialogHeader,
-  DrawerDialogTitle,
-  DrawerDialogTrigger,
-} from "@/components/ui/drawer-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -102,26 +102,26 @@ export function CreateElementModal() {
   });
 
   return (
-    <DrawerDialog open={open} onOpenChange={setOpen}>
-      <DrawerDialogTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button className="fixed right-8 bottom-8 z-50 h-14 w-14 rounded-full bg-[#efcb61] p-0 text-[#3d2f00] shadow-2xl shadow-[#efcb61]/20 transition-all hover:scale-110 hover:bg-[#d2af48] active:scale-95">
           <Plus size={28} strokeWidth={2.5} />
         </Button>
-      </DrawerDialogTrigger>
-      <DrawerDialogContent className="w-full p-0 md:max-w-[640px] md:rounded-2xl">
+      </DialogTrigger>
+      <DialogContent className="w-full p-0 md:max-w-[640px] md:rounded-2xl">
         <ScrollArea
           className={cn("w-full", type === "character" ? "h-[80vh]" : "h-max")}
         >
           <form onSubmit={(e) => void onSubmit(e)} className="p-6">
-            <DrawerDialogHeader className="pb-6">
-              <DrawerDialogTitle className="font-headline text-2xl font-bold tracking-tight text-white">
+            <DialogHeader className="pb-6">
+              <DialogTitle className="font-headline text-2xl font-bold tracking-tight text-white">
                 Initialize Element
-              </DrawerDialogTitle>
-              <DrawerDialogDescription className="text-sm leading-relaxed text-[#e5e2e1]/40">
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-relaxed text-[#e5e2e1]/40">
                 Begin by defining the core identity of your character,
                 environment, or item.
-              </DrawerDialogDescription>
-            </DrawerDialogHeader>
+              </DialogDescription>
+            </DialogHeader>
 
             <div className="space-y-6 pb-8">
               <Controller
@@ -288,7 +288,7 @@ export function CreateElementModal() {
               )}
             </div>
 
-            <DrawerDialogFooter className="pt-6">
+            <DialogFooter className="pt-6">
               <Button
                 type="button"
                 variant="ghost"
@@ -311,10 +311,10 @@ export function CreateElementModal() {
                   <span>Create {type}</span>
                 )}
               </Button>
-            </DrawerDialogFooter>
+            </DialogFooter>
           </form>
         </ScrollArea>
-      </DrawerDialogContent>
-    </DrawerDialog>
+      </DialogContent>
+    </Dialog>
   );
 }
