@@ -18,3 +18,21 @@ export const VoiceCloneFormSchema = z.object({
 export const CreateProjectFormSchema = z.object({
   name: z.string().min(1, ERROR_MESSAGE.REQUIRED),
 });
+
+export const CreateElementFormSchema = z.object({
+  type: z.enum(["character", "environment", "item"]),
+  name: z.string().min(1, ERROR_MESSAGE.REQUIRED),
+  age: z.string(),
+  appearance: z.string(),
+  description: z.string(),
+  personality: z.string(),
+});
+
+export const ReferenceImageSchema = z.object({
+  name: z.string().min(1, ERROR_MESSAGE.REQUIRED),
+  description: z.string().optional(),
+});
+
+export const AddReferenceSchema = ReferenceImageSchema.extend({
+  imageId: z.string().min(1, "Image is required"),
+});

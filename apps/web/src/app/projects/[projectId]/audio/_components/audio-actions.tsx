@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MicIcon, MoreHorizontalIcon, SparklesIcon } from "lucide-react";
+import { MicIcon, MoreVerticalIcon, SparklesIcon } from "lucide-react";
 import { useState } from "react";
 import { TTSForm } from "./tts-form";
 import { VoiceCloneForm } from "./voice-clone-form";
@@ -20,8 +20,8 @@ export function AudioActions() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="rounded-full">
-            <MoreHorizontalIcon size={20} />
+          <Button variant="outline" size="sm" className="size-8 rounded-full">
+            <MoreVerticalIcon size={20} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
@@ -52,8 +52,8 @@ export function AudioActions() {
 
 export function AudioActionsSkeleton() {
   return (
-    <Button variant="ghost" size="sm" className="rounded-full">
-      <MoreHorizontalIcon size={20} />
+    <Button variant="outline" size="sm" className="size-8 rounded-full">
+      <MoreVerticalIcon size={20} />
     </Button>
   );
 }

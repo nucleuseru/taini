@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  DrawerDialog,
-  DrawerDialogContent,
-  DrawerDialogDescription,
-  DrawerDialogFooter,
-  DrawerDialogHeader,
-  DrawerDialogTitle,
-} from "@/components/ui/drawer-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -34,13 +34,13 @@ export function ConfirmDialog({
   loading = false,
 }: ConfirmDialogProps) {
   return (
-    <DrawerDialog open={open} onOpenChange={onOpenChange}>
-      <DrawerDialogContent className="sm:max-w-[425px]">
-        <DrawerDialogHeader>
-          <DrawerDialogTitle>{title}</DrawerDialogTitle>
-          <DrawerDialogDescription>{description}</DrawerDialogDescription>
-        </DrawerDialogHeader>
-        <DrawerDialogFooter className="gap-2 pt-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 pt-4">
           <Button
             variant="ghost"
             onClick={() => {
@@ -60,8 +60,8 @@ export function ConfirmDialog({
           >
             {confirmText}
           </Button>
-        </DrawerDialogFooter>
-      </DrawerDialogContent>
-    </DrawerDialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

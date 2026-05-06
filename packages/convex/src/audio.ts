@@ -119,6 +119,11 @@ export const remove = authMutation({
   handler: (ctx, args) => removeAudioHandler(ctx, args.id),
 });
 
+export const rename = authMutation({
+  args: { id: v.id("audio"), title: v.string() },
+  handler: (ctx, args) => ctx.db.patch(args.id, { title: args.title }),
+});
+
 export const triggerInference = authMutation({
   args: { id: v.id("audio") },
   handler: async (ctx, args) => {

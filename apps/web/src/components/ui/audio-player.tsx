@@ -45,12 +45,12 @@ function formatTime(seconds: number) {
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
 
-  const formattedMins = mins < 10 ? `0${mins}` : mins;
-  const formattedSecs = secs < 10 ? `0${secs}` : secs;
+  const formattedMins = mins < 10 ? `0${String(mins)}` : String(mins);
+  const formattedSecs = secs < 10 ? `0${String(secs)}` : String(secs);
 
   return hrs > 0
-    ? `${hrs}:${formattedMins}:${formattedSecs}`
-    : `${mins}:${formattedSecs}`;
+    ? `${String(hrs)}:${formattedMins}:${formattedSecs}`
+    : `${String(mins)}:${formattedSecs}`;
 }
 
 interface AudioPlayerItem<TData = unknown> {
@@ -70,7 +70,7 @@ interface AudioPlayerApi<TData = unknown> {
   isItemActive: (id: string | number | null) => boolean;
   setActiveItem: (item: AudioPlayerItem<TData> | null) => Promise<void>;
   play: (item?: AudioPlayerItem<TData> | null) => Promise<void>;
-  pause: () => void;
+  pause: () => Promise<void>;
   seek: (time: number) => void;
   setPlaybackRate: (rate: number) => void;
 }
@@ -99,49 +99,40 @@ export const useAudioPlayerTime = () => {
   return time;
 };
 
-export function AudioPlayerProvider<TData = unknown>({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const itemRef = useRef<AudioPlayerItem<TData> | null>(null);
+  const itemRef = useRef<AudioPlayerItem | null>(null);
   const playPromiseRef = useRef<Promise<void> | null>(null);
-  const [readyState, setReadyState] = useState(0);
-  const [networkState, setNetworkState] = useState(0);
+  const [readyState, setReadyState] = useState(ReadyState.HAVE_NOTHING);
+  const [networkState, setNetworkState] = useState(NetworkState.NETWORK_EMPTY);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState<number | undefined>(undefined);
   const [error, setError] = useState<MediaError | null>(null);
-  const [activeItem, _setActiveItem] = useState<AudioPlayerItem<TData> | null>(
-    null,
-  );
+  const [activeItem, _setActiveItem] = useState<AudioPlayerItem | null>(null);
   const [paused, setPaused] = useState(true);
   const [playbackRate, setPlaybackRateState] = useState(1);
 
-  const setActiveItem = useCallback(
-    async (item: AudioPlayerItem<TData> | null) => {
-      if (!audioRef.current) return;
+  const setActiveItem = useCallback(async (item: AudioPlayerItem | null) => {
+    if (!audioRef.current) return;
 
-      if (item?.id === itemRef.current?.id) {
-        return;
-      }
-      itemRef.current = item;
-      const currentRate = audioRef.current.playbackRate;
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      if (item === null) {
-        audioRef.current.removeAttribute("src");
-      } else {
-        audioRef.current.src = item.src;
-      }
-      audioRef.current.load();
-      audioRef.current.playbackRate = currentRate;
-    },
-    [],
-  );
+    if (item?.id === itemRef.current?.id) {
+      return;
+    }
+    itemRef.current = item;
+    const currentRate = audioRef.current.playbackRate;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+    if (item === null) {
+      audioRef.current.removeAttribute("src");
+    } else {
+      audioRef.current.src = item.src;
+    }
+    audioRef.current.load();
+    audioRef.current.playbackRate = currentRate;
+  }, []);
 
   const play = useCallback(
-    async (item?: AudioPlayerItem<TData> | null) => {
+    async (item?: AudioPlayerItem | null) => {
       if (!audioRef.current) return;
 
       if (playPromiseRef.current) {
@@ -219,8 +210,8 @@ export function AudioPlayerProvider<TData = unknown>({
   useAnimationFrame(() => {
     if (audioRef.current) {
       _setActiveItem(itemRef.current);
-      setReadyState(audioRef.current.readyState);
-      setNetworkState(audioRef.current.networkState);
+      setReadyState(audioRef.current.readyState as ReadyState);
+      setNetworkState(audioRef.current.networkState as NetworkState);
       setTime(audioRef.current.currentTime);
       setDuration(audioRef.current.duration);
       setPaused(audioRef.current.paused);
@@ -234,7 +225,7 @@ export function AudioPlayerProvider<TData = unknown>({
     readyState < ReadyState.HAVE_FUTURE_DATA &&
     networkState === NetworkState.NETWORK_LOADING;
 
-  const api = useMemo<AudioPlayerApi<TData>>(
+  const api = useMemo<AudioPlayerApi>(
     () => ({
       ref: audioRef,
       duration,
@@ -268,7 +259,7 @@ export function AudioPlayerProvider<TData = unknown>({
   );
 
   return (
-    <AudioPlayerContext.Provider value={api as AudioPlayerApi}>
+    <AudioPlayerContext.Provider value={api}>
       <AudioPlayerTimeContext.Provider value={time}>
         <audio ref={audioRef} className="hidden" crossOrigin="anonymous" />
         {children}
@@ -292,20 +283,20 @@ export const AudioPlayerProgress = ({
       {...otherProps}
       value={[time]}
       onValueChange={(vals) => {
-        player.seek(vals[0]);
+        player.seek(vals[0] as unknown as number);
         otherProps.onValueChange?.(vals);
       }}
       min={0}
       max={player.duration ?? 0}
-      step={otherProps.step || 0.25}
+      step={otherProps.step ?? 0.25}
       onPointerDown={(e) => {
         wasPlayingRef.current = player.isPlaying;
-        player.pause();
+        void player.pause();
         otherProps.onPointerDown?.(e);
       }}
       onPointerUp={(e) => {
         if (wasPlayingRef.current) {
-          player.play();
+          void player.play();
         }
         otherProps.onPointerUp?.(e);
       }}
@@ -317,9 +308,9 @@ export const AudioPlayerProgress = ({
         if (e.key === " ") {
           e.preventDefault();
           if (!player.isPlaying) {
-            player.play();
+            void player.play();
           } else {
-            player.pause();
+            void player.pause();
           }
         }
         otherProps.onKeyDown?.(e);
@@ -368,9 +359,7 @@ export const AudioPlayerDuration = ({
       {...otherProps}
       className={cn("text-muted-foreground text-sm tabular-nums", className)}
     >
-      {player.duration !== null &&
-      player.duration !== undefined &&
-      !Number.isNaN(player.duration)
+      {player.duration !== undefined && !Number.isNaN(player.duration)
         ? formatTime(player.duration)
         : "--:--"}
     </span>
@@ -460,9 +449,9 @@ export function AudioPlayerButton<TData = unknown>({
         playing={player.isPlaying}
         onPlayingChange={(shouldPlay) => {
           if (shouldPlay) {
-            player.play();
+            void player.play();
           } else {
-            player.pause();
+            void player.pause();
           }
         }}
         loading={player.isBuffering && player.isPlaying}
@@ -476,9 +465,9 @@ export function AudioPlayerButton<TData = unknown>({
       playing={player.isItemActive(item.id) && player.isPlaying}
       onPlayingChange={(shouldPlay) => {
         if (shouldPlay) {
-          player.play(item);
+          void player.play(item);
         } else {
-          player.pause();
+          void player.pause();
         }
       }}
       loading={
@@ -559,7 +548,7 @@ export function AudioPlayerSpeed({
             className="flex items-center justify-between"
           >
             <span className={speed === 1 ? "" : "font-mono"}>
-              {speed === 1 ? "Normal" : `${speed}x`}
+              {speed === 1 ? "Normal" : `${String(speed)}x`}
             </span>
             {currentSpeed === speed && <Check className="size-4" />}
           </DropdownMenuItem>

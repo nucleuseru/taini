@@ -24,6 +24,9 @@ export const UpdateCharacterArgsValidator = v.object({
   appearance: v.optional(CharacterFields.appearance),
   description: v.optional(CharacterFields.description),
   personality: v.optional(CharacterFields.personality),
+  referenceImages: v.optional(
+    v.array(v.object(CharacterFields.referenceImages.element.fields)),
+  ),
 });
 
 export const AddCharacterReferenceImagesArgsValidator = v.object({

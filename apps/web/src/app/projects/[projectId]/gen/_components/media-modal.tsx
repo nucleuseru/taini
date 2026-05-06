@@ -106,6 +106,16 @@ export function MediaModal({ media, onClose }: MediaModelProps) {
               />
             </div>
 
+            <div>
+              <div className="mb-2 text-[10px] tracking-wider uppercase opacity-50">
+                Media ID
+              </div>
+              <CopyableText
+                text={media._id}
+                className="rounded border border-white/10 bg-white/5 p-2 font-mono text-[10px]"
+              />
+            </div>
+
             <div className="flex flex-wrap gap-2 text-[10px] font-semibold tracking-wider uppercase">
               <span className="rounded border border-[#353534] bg-[#2a2a2a] px-2 py-1">
                 {media.width}x{media.height}

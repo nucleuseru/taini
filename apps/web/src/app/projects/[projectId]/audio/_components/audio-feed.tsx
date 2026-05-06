@@ -9,11 +9,12 @@ import {
 } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
 import {
-  DrawerDialog,
-  DrawerDialogContent,
-  DrawerDialogDescription,
-  DrawerDialogTitle,
-} from "@/components/ui/drawer-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { api } from "@repo/convex/api";
@@ -23,11 +24,12 @@ import {
   DownloadIcon,
   Loader2Icon,
   MusicIcon,
+  PencilIcon,
   SparklesIcon,
   Trash2Icon,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export type AudioAsset = Doc<"audio"> & { url?: string | null };
@@ -57,8 +59,8 @@ export function AudioFeed() {
           No audio yet
         </h3>
         <p className="text-muted-foreground mt-2 max-w-xs text-sm opacity-50">
-          Start by generating some speech or cloning a voice using the form
-          below.
+          Start by generating some speech or cloning a voice by clicking the
+          button on the top right corner.
         </p>
       </div>
     );
@@ -78,9 +80,11 @@ export function AudioFeed() {
         ))}
       </div>
 
-      <AudioDetailsDrawer
+      <AudioDetailsDialog
         audio={selectedAudio}
-        onOpenChange={(open) => !open && setSelectedAudio(null)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedAudio(null);
+        }}
       />
     </>
   );
@@ -131,7 +135,7 @@ function AudioCard({
           {audio.ttsStatus === "completed" ? (
             <span className="text-[#efcb61]">Generated</span>
           ) : (
-            <span>{audio.ttsStatus || "Uploaded"}</span>
+            <span>{audio.ttsStatus ?? "Uploaded"}</span>
           )}
         </div>
         {audio.url && (
@@ -145,7 +149,7 @@ function AudioCard({
   );
 }
 
-function AudioDetailsDrawer({
+function AudioDetailsDialog({
   audio,
   onOpenChange,
 }: {
@@ -162,7 +166,7 @@ function AudioDetailsDrawer({
       await removeAudio({ id: audio._id });
       toast.success("Audio removed");
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to remove audio");
     }
   };
@@ -173,7 +177,7 @@ function AudioDetailsDrawer({
     try {
       await triggerInference({ id: audio._id });
       toast.success("Inference triggered");
-    } catch (error) {
+    } catch {
       toast.error("Failed to trigger inference");
     } finally {
       setIsTriggering(false);
@@ -181,20 +185,20 @@ function AudioDetailsDrawer({
   };
 
   return (
-    <DrawerDialog open={!!audio} onOpenChange={onOpenChange}>
-      <DrawerDialogContent className="max-w-2xl border-none bg-[#1a1a1a] p-0 text-[#e5e2e1]">
+    <Dialog open={!!audio} onOpenChange={onOpenChange}>
+      <DialogContent>
         {audio && (
-          <div className="flex flex-col">
-            <div className="p-6 pb-0">
-              <DrawerDialogTitle className="font-headline text-2xl font-bold tracking-tight">
-                {audio.title ?? "Audio Details"}
-              </DrawerDialogTitle>
-              <DrawerDialogDescription className="text-muted-foreground mt-1 text-sm opacity-50">
+          <div className="flex flex-col space-y-6">
+            <div>
+              <DialogTitle>
+                <AudioTitleInput audio={audio} />
+              </DialogTitle>
+              <DialogDescription>
                 Created on {new Date(audio._creationTime).toLocaleString()}
-              </DrawerDialogDescription>
+              </DialogDescription>
             </div>
 
-            <div className="p-6">
+            <div>
               {audio.url ? (
                 <div className="bg-muted/50 mb-8 flex flex-col gap-4 rounded-2xl border border-white/5 p-6">
                   <div className="flex items-center justify-between gap-4">
@@ -214,27 +218,27 @@ function AudioDetailsDrawer({
                   </div>
                 </div>
               ) : (
-                <div className="bg-muted mb-8 flex h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 opacity-50">
+                <div className="bg-muted mb-6 flex h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 opacity-50">
                   <MusicIcon size={32} className="mb-2 opacity-20" />
                   <span className="text-xs">Processing audio...</span>
                 </div>
               )}
 
               {audio.text && (
-                <div className="mb-8 flex flex-col gap-2">
+                <div className="mb-6 flex flex-col gap-2">
                   <h4 className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase opacity-50">
                     Transcript / Text
                   </h4>
-                  <div className="rounded-xl border border-white/5 bg-white/5 p-4">
+                  <ScrollArea className="h-[200px] rounded-xl border border-white/5 bg-white/5 p-4">
                     <CopyableText
                       text={audio.text}
                       className="text-sm leading-relaxed"
                     />
-                  </div>
+                  </ScrollArea>
                 </div>
               )}
 
-              <div className="flex items-center justify-between border-t border-white/5 pt-6">
+              <div className="flex items-center justify-between">
                 <div className="flex gap-2">
                   {audio.url && (
                     <Button
@@ -255,7 +259,7 @@ function AudioDetailsDrawer({
                       size="sm"
                       className="h-9 gap-2 rounded-lg border-white/10 bg-white/5 px-4 text-xs font-medium hover:bg-white/10"
                       disabled={isTriggering}
-                      onClick={onTrigger}
+                      onClick={() => void onTrigger()}
                     >
                       {isTriggering ? (
                         <Loader2Icon size={14} className="animate-spin" />
@@ -270,7 +274,7 @@ function AudioDetailsDrawer({
                   variant="ghost"
                   size="sm"
                   className="h-9 gap-2 rounded-lg text-red-400/60 hover:bg-red-500/10 hover:text-red-400"
-                  onClick={onDelete}
+                  onClick={() => void onDelete()}
                 >
                   <Trash2Icon size={14} />
                   Delete
@@ -279,8 +283,72 @@ function AudioDetailsDrawer({
             </div>
           </div>
         )}
-      </DrawerDialogContent>
-    </DrawerDialog>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AudioTitleInput({ audio }: { audio: AudioAsset }) {
+  const renameAudio = useMutation(api.audio.rename);
+  const [title, setTitle] = useState(audio.title ?? "");
+  const [isSaving, setIsSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync when the live document changes (e.g. optimistic update settles)
+  useEffect(() => {
+    setTitle(audio.title ?? "");
+  }, [audio.title]);
+
+  const save = async () => {
+    const trimmed = title.trim();
+    if (!trimmed || trimmed === (audio.title ?? "")) return;
+    setIsSaving(true);
+    try {
+      await renameAudio({ id: audio._id, title: trimmed });
+    } catch {
+      toast.error("Failed to rename audio");
+      setTitle(audio.title ?? "");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="group flex items-center gap-1.5">
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => inputRef.current?.focus()}
+        className="p-0 ring-0! outline-0!"
+      >
+        <PencilIcon size={12} />
+      </Button>
+      <input
+        ref={inputRef}
+        type="text"
+        value={title}
+        onChange={(e) => {
+          setTitle(e.target.value);
+        }}
+        onBlur={() => void save()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+          if (e.key === "Escape") {
+            setTitle(audio.title ?? "");
+            e.currentTarget.blur();
+          }
+        }}
+        disabled={isSaving}
+        placeholder="Untitled Audio"
+        className={cn(
+          "flex-1 bg-transparent text-base font-semibold tracking-tight text-[#e5e2e1] outline-none",
+          "rounded-sm border-b border-transparent transition-colors",
+          "hover:border-white/20 focus:border-[#efcb61]/50",
+          "placeholder:text-white/30",
+          isSaving && "opacity-50",
+        )}
+      />
+    </div>
   );
 }
 
