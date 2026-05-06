@@ -54,8 +54,12 @@ export const listImagesHandler = async (
     .order(options.sort ?? "desc")
     .filter((q) =>
       q.and(
-        q.eq(q.field("uploaded"), options.uploaded ?? undefined),
-        q.eq(q.field("illustration"), options.illustration ?? undefined),
+        options.uploaded !== undefined
+          ? q.eq(q.field("uploaded"), options.uploaded)
+          : true,
+        options.illustration !== undefined
+          ? q.eq(q.field("illustration"), options.illustration)
+          : true,
       ),
     )
     .paginate(options.paginationOpts);

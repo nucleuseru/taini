@@ -4,7 +4,7 @@ import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 import { RunMutationCtx, RunQueryCtx, sleep } from "../utils";
 
-export const DELAY = 10000;
+export const DELAY = 500;
 
 // --- Image Tools ---
 
@@ -24,7 +24,13 @@ export const listImagesTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
         paginationOpts: { numItems: args.limit ?? 100, cursor: null },
       });
 
-      return result.page;
+      return result.page.map((image) => ({
+        id: image._id,
+        prompt: image.prompt,
+        uploaded: image.uploaded,
+        illustration: image.illustration,
+        referenceImages: image.referenceImages,
+      }));
     },
   });
 
@@ -42,7 +48,7 @@ export const generateImagesTool = (
           prompt: z.string().describe("The prompt to generate the image"),
           illustration: z
             .boolean()
-            .describe("Whether this is a character or an environment"),
+            .describe("Whether this is a character, environment or item/prop"),
           referenceImages: z
             .array(z.string())
             .optional()
@@ -84,7 +90,14 @@ export const listAudiosTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
         projectId,
         paginationOpts: { numItems: args.limit ?? 100, cursor: null },
       });
-      return result.page;
+      return result.page.map((audio) => ({
+        id: audio._id,
+        text: audio.text,
+        title: audio.title,
+        uploaded: audio.uploaded,
+        timestamps: audio.timestamps,
+        referenceVoice: audio.referenceVoice,
+      }));
     },
   });
 
@@ -135,7 +148,15 @@ export const listCharactersTool = (
       const result = await ctx.runQuery(internal.agent.fn.listCharacters, {
         projectId,
       });
-      return result;
+      return result.map((character) => ({
+        id: character._id,
+        age: character.age,
+        name: character.name,
+        appearance: character.appearance,
+        description: character.description,
+        personality: character.personality,
+        referenceImages: character.referenceImages,
+      }));
     },
   });
 
@@ -196,7 +217,7 @@ export const addCharacterReferenceImagesTool = (ctx: RunMutationCtx) =>
     }),
     execute: async ({ references }) => {
       await sleep(DELAY);
-      const result = await Promise.all(
+      await Promise.all(
         references.map((ref) =>
           ctx.runMutation(internal.agent.fn.addCharacterReferenceImages, {
             id: ref.characterId as Id<"character">,
@@ -207,7 +228,7 @@ export const addCharacterReferenceImagesTool = (ctx: RunMutationCtx) =>
           }),
         ),
       );
-      return result;
+      return "done";
     },
   });
 
@@ -225,7 +246,12 @@ export const listEnvironmentsTool = (
       const result = await ctx.runQuery(internal.agent.fn.listEnvironments, {
         projectId,
       });
-      return result;
+      return result.map((env) => ({
+        id: env._id,
+        name: env.name,
+        description: env.description,
+        referenceImages: env.referenceImages,
+      }));
     },
   });
 
@@ -283,7 +309,7 @@ export const addEnvironmentReferenceImagesTool = (ctx: RunMutationCtx) =>
     }),
     execute: async ({ references }) => {
       await sleep(DELAY);
-      const result = await Promise.all(
+      await Promise.all(
         references.map((ref) =>
           ctx.runMutation(internal.agent.fn.addEnvironmentReferenceImages, {
             id: ref.environmentId as Id<"environment">,
@@ -294,7 +320,7 @@ export const addEnvironmentReferenceImagesTool = (ctx: RunMutationCtx) =>
           }),
         ),
       );
-      return result;
+      return "done";
     },
   });
 
@@ -309,7 +335,12 @@ export const listItemsTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
       const result = await ctx.runQuery(internal.agent.fn.listItems, {
         projectId,
       });
-      return result;
+      return result.map((item) => ({
+        id: item._id,
+        name: item.name,
+        description: item.description,
+        referenceImages: item.referenceImages,
+      }));
     },
   });
 
@@ -363,7 +394,7 @@ export const addItemReferenceImagesTool = (ctx: RunMutationCtx) =>
     }),
     execute: async ({ references }) => {
       await sleep(DELAY);
-      const result = await Promise.all(
+      await Promise.all(
         references.map((ref) =>
           ctx.runMutation(internal.agent.fn.addItemReferenceImages, {
             id: ref.itemId as Id<"item">,
@@ -374,7 +405,7 @@ export const addItemReferenceImagesTool = (ctx: RunMutationCtx) =>
           }),
         ),
       );
-      return result;
+      return "done";
     },
   });
 
@@ -392,7 +423,12 @@ export const listScenesTool = (
       const result = await ctx.runQuery(internal.agent.fn.listScenes, {
         storyboardId,
       });
-      return result;
+      return result.map((scene) => ({
+        id: scene._id,
+        title: scene.title,
+        order: scene.order,
+        description: scene.description,
+      }));
     },
   });
 
@@ -438,7 +474,17 @@ export const listShotsTool = (ctx: RunQueryCtx) =>
       const result = await ctx.runQuery(internal.agent.fn.listShots, {
         sceneId: args.sceneId as Id<"scene">,
       });
-      return result;
+      return result.map((shot) => ({
+        id: shot._id,
+        order: shot.order,
+        title: shot.title,
+        sceneId: shot.sceneId,
+        duration: shot.duration,
+        endFrames: shot.endFrames,
+        videoClips: shot.videoClips,
+        startFrames: shot.startFrames,
+        description: shot.description,
+      }));
     },
   });
 
@@ -484,7 +530,7 @@ export const addShotStartFramesTool = (ctx: RunMutationCtx) =>
     }),
     execute: async ({ shots }) => {
       await sleep(DELAY);
-      const result = await Promise.all(
+      await Promise.all(
         shots.map((shot) =>
           ctx.runMutation(internal.agent.fn.addShotStartFrames, {
             id: shot.shotId as Id<"shot">,
@@ -492,7 +538,7 @@ export const addShotStartFramesTool = (ctx: RunMutationCtx) =>
           }),
         ),
       );
-      return result;
+      return "done";
     },
   });
 
@@ -510,7 +556,7 @@ export const addShotEndFramesTool = (ctx: RunMutationCtx) =>
     }),
     execute: async ({ shots }) => {
       await sleep(DELAY);
-      const result = await Promise.all(
+      await Promise.all(
         shots.map((shot) =>
           ctx.runMutation(internal.agent.fn.addShotEndFrames, {
             id: shot.shotId as Id<"shot">,
@@ -518,7 +564,7 @@ export const addShotEndFramesTool = (ctx: RunMutationCtx) =>
           }),
         ),
       );
-      return result;
+      return "done";
     },
   });
 
@@ -535,7 +581,7 @@ export const addShotVideoClipsTool = (ctx: RunMutationCtx) =>
     }),
     execute: async ({ shots }) => {
       await sleep(DELAY);
-      const result = await Promise.all(
+      await Promise.all(
         shots.map((shot) =>
           ctx.runMutation(internal.agent.fn.addShotVideoClips, {
             id: shot.shotId as Id<"shot">,
@@ -543,7 +589,7 @@ export const addShotVideoClipsTool = (ctx: RunMutationCtx) =>
           }),
         ),
       );
-      return result;
+      return "done";
     },
   });
 
@@ -564,7 +610,14 @@ export const listVideosTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
         projectId,
         paginationOpts: { numItems: args.limit ?? 100, cursor: null },
       });
-      return result.page;
+      return result.page.map((video) => ({
+        id: video._id,
+        prompt: video.prompt,
+        uploaded: video.uploaded,
+        duration: video.duration,
+        startFrame: video.startFrame,
+        negativePrompt: video.negativePrompt,
+      }));
     },
   });
 
@@ -630,6 +683,11 @@ export const listVoicesTool = (ctx: RunQueryCtx, projectId: Id<"project">) =>
         projectId,
         paginationOpts: { numItems: args.limit ?? 100, cursor: null },
       });
-      return result.page;
+      return result.page.map((voice) => ({
+        id: voice._id,
+        name: voice.name,
+        uploaded: voice.uploaded,
+        referenceAudio: voice.referenceAudio,
+      }));
     },
   });

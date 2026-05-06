@@ -67,6 +67,8 @@ CONSTRAINTS
 - Prioritize visual clarity and uniqueness
 
 Your output must be immediately usable by production design, casting, and generative models.
+
+If you can batch operations by the tools given to you, batch them to increase speed
 `;
 
 export const CREATE_VOICEOVER_DIALOGUE_PROMPT = `
@@ -139,6 +141,8 @@ CONSTRAINTS
 - Keep dialogue filmable and realistic
 
 Output must be ready for actors and voice performers.
+
+If you can batch operations by the tools given to you, batch them to increase speed
 `;
 
 export const CREATE_SHOT_SCENE_PROMPT = `
@@ -206,6 +210,8 @@ CONSTRAINTS
 - Optimize for editing flexibility
 
 This output must be directly usable by a cinematographer and editor.
+
+If you can batch operations by the tools given to you, batch them to increase speed
 `;
 
 export const SYSTEM_PROMPT = `

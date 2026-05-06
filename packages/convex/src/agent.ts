@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { ActionCtx, internalAction } from "./_generated/server";
 import { createAgent } from "./agent/index";
@@ -18,10 +18,15 @@ const getThread = async (
   userId: string,
   projectId: Id<"project">,
 ) => {
-  const project = await ctx.runQuery(api.project.get, { id: projectId });
-  const storyboard = await ctx.runQuery(api.storyboard.getByProject, {
-    projectId,
+  const project = await ctx.runQuery(internal.project.getInternal, {
+    id: projectId,
   });
+  const storyboard = await ctx.runQuery(
+    internal.storyboard.getByProjectInternal,
+    {
+      projectId,
+    },
+  );
 
   if (!project) {
     throw new ConvexError("Project does not exist");
@@ -48,7 +53,7 @@ const getThread = async (
       });
 
   if (!storyboard.threadId) {
-    await ctx.runMutation(api.storyboard.update, {
+    await ctx.runMutation(internal.storyboard.updateInternal, {
       id: storyboard._id,
       threadId: thread.threadId,
     });
@@ -62,6 +67,7 @@ export const createVoiceOverDialogueInternal = internalAction({
   handler: async (ctx, args) => {
     const thread = await getThread(ctx, args.userId, args.projectId);
     await thread.generateText({
+      toolChoice: "required",
       prompt: CREATE_VOICEOVER_DIALOGUE_PROMPT,
       activeTools: ["listVoices", "listAudios", "generateAudios"],
     });
@@ -73,6 +79,7 @@ export const createCharactersEnvironmentsItemsInternal = internalAction({
   handler: async (ctx, args) => {
     const thread = await getThread(ctx, args.userId, args.projectId);
     await thread.generateText({
+      toolChoice: "required",
       prompt: CREATE_CHARACTER_ENVIRONMENT_ITEM_PROMPT,
       system: [
         { role: "system", content: SYSTEM_PROMPT },
@@ -99,6 +106,68 @@ export const createShotsScenesInternal = internalAction({
   args: { userId: v.string(), projectId: v.id("project") },
   handler: async (ctx, args) => {
     const thread = await getThread(ctx, args.userId, args.projectId);
+    await thread.generateText({
+      toolChoice: "required",
+      prompt: CREATE_SHOT_SCENE_PROMPT,
+      system: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: IMAGE_PROMPTING_GUIDELINES },
+        { role: "system", content: VIDEO_PROMPTING_GUIDELINES },
+      ] as unknown as string,
+      activeTools: [
+        "listShots",
+        "listScenes",
+        "listImages",
+        "listVideos",
+        "listAudios",
+        "listItems",
+        "listCharacters",
+        "listEnvironments",
+        "createShots",
+        "createScenes",
+        "generateImages",
+        "generateVideos",
+        "addShotVideoClips",
+        "addShotStartFrames",
+      ],
+    });
+  },
+});
+
+export const createFullStoryboardInternal = internalAction({
+  args: { userId: v.string(), projectId: v.id("project") },
+  handler: async (ctx, args) => {
+    const thread = await getThread(ctx, args.userId, args.projectId);
+
+    // 1. Extract Characters, Environments, Items
+    await thread.generateText({
+      prompt: CREATE_CHARACTER_ENVIRONMENT_ITEM_PROMPT,
+      system: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: IMAGE_PROMPTING_GUIDELINES },
+      ] as unknown as string,
+      activeTools: [
+        "listItems",
+        "listImages",
+        "listCharacters",
+        "listEnvironments",
+        "createItems",
+        "generateImages",
+        "createCharacters",
+        "createEnvironments",
+        "addItemReferenceImages",
+        "addCharacterReferenceImages",
+        "addEnvironmentReferenceImages",
+      ],
+    });
+
+    // 2. Extract Voiceover Dialogue
+    await thread.generateText({
+      prompt: CREATE_VOICEOVER_DIALOGUE_PROMPT,
+      activeTools: ["listVoices", "listAudios", "generateAudios"],
+    });
+
+    // 3. Compose Scenes & Shots
     await thread.generateText({
       prompt: CREATE_SHOT_SCENE_PROMPT,
       system: [
@@ -155,5 +224,19 @@ export const createShotsScenes = authAction({
       projectId: args.projectId,
       userId: ctx.user._id,
     });
+  },
+});
+
+export const createFullStoryboard = authAction({
+  args: { projectId: v.id("project") },
+  handler: async (ctx, args) => {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.agent.createFullStoryboardInternal,
+      {
+        projectId: args.projectId,
+        userId: ctx.user._id,
+      },
+    );
   },
 });

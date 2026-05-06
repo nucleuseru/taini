@@ -1,6 +1,18 @@
 import { v } from "convex/values";
-import { authMutation, authQuery } from "./function";
+import { Id } from "./_generated/dataModel";
+import { internalQuery, QueryCtx } from "./_generated/server";
+import { authMutation, authQuery, internalMutation } from "./function";
 import { StoryboardFields } from "./schema";
+
+const getStoryboardByProjectHandler = async (
+  ctx: QueryCtx,
+  projectId: Id<"project">,
+) => {
+  return await ctx.db
+    .query("storyboard")
+    .withIndex("by_project_id", (q) => q.eq("projectId", projectId))
+    .unique();
+};
 
 export const get = authQuery({
   args: { id: v.id("storyboard") },
@@ -12,10 +24,14 @@ export const get = authQuery({
 export const getByProject = authQuery({
   args: { projectId: v.id("project") },
   handler: async (ctx, args) => {
-    return await ctx.db
-      .query("storyboard")
-      .withIndex("by_project_id", (q) => q.eq("projectId", args.projectId))
-      .unique();
+    return getStoryboardByProjectHandler(ctx, args.projectId);
+  },
+});
+
+export const getByProjectInternal = internalQuery({
+  args: { projectId: v.id("project") },
+  handler: async (ctx, args) => {
+    return getStoryboardByProjectHandler(ctx, args.projectId);
   },
 });
 
@@ -42,6 +58,24 @@ export const create = authMutation({
 });
 
 export const update = authMutation({
+  args: {
+    id: v.id("storyboard"),
+    threadId: StoryboardFields.threadId,
+    script: v.optional(StoryboardFields.script),
+    width: StoryboardFields.width,
+    height: StoryboardFields.height,
+    frameRate: StoryboardFields.frameRate,
+    style: StoryboardFields.style,
+    referenceStyle: StoryboardFields.referenceStyle,
+    audio: StoryboardFields.audio,
+  },
+  handler: async (ctx, args) => {
+    const { id, ...fields } = args;
+    await ctx.db.patch(id, fields);
+  },
+});
+
+export const updateInternal = internalMutation({
   args: {
     id: v.id("storyboard"),
     threadId: StoryboardFields.threadId,

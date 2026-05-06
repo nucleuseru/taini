@@ -19,17 +19,13 @@ export function ShotList({ sceneId }: { sceneId: Id<"scene"> }) {
 
   if (shots.length === 0) {
     return (
-      <div className="text-muted-foreground flex h-32 w-full items-center justify-center text-sm">
-        No shots in this scene.
+      <div className="flex h-32 w-full items-center justify-center text-sm font-medium text-white/20">
+        Void of shots.
       </div>
     );
   }
 
-  return (
-    <>
-      {shots.map((shot, index) => (
-        <ShotCard key={shot._id} shot={shot} index={index} />
-      ))}
-    </>
-  );
+  return shots.map((shot, index) => (
+    <ShotCard key={shot._id} shot={shot} index={index} />
+  ));
 }

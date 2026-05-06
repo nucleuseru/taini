@@ -1,9 +1,17 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import { internalQuery } from "./_generated/server";
 import { authMutation, authQuery } from "./function";
 import { ProjectFields } from "./schema";
 
 export const get = authQuery({
+  args: { id: v.id("project") },
+  handler: (cxt, args) => {
+    return cxt.db.get("project", args.id);
+  },
+});
+
+export const getInternal = internalQuery({
   args: { id: v.id("project") },
   handler: (cxt, args) => {
     return cxt.db.get("project", args.id);

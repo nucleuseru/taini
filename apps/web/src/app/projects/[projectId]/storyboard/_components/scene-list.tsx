@@ -23,17 +23,16 @@ export function SceneList({
 
   if (scenes.length === 0) {
     return (
-      <div className="flex w-full items-center justify-center rounded-lg border border-dashed p-8">
-        <p className="text-muted-foreground text-sm">
-          No scenes generated yet. Click &quot;Generate Storyboard&quot; to
-          start.
+      <div className="flex w-full items-center justify-center p-12">
+        <p className="text-sm font-medium tracking-wide text-white/20">
+          The script awaits its visualization.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-12">
+    <div className="flex flex-col gap-8 pb-24">
       {scenes.map((scene, index) => (
         <SceneCard key={scene._id} scene={scene} index={index} />
       ))}

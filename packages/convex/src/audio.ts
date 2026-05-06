@@ -50,7 +50,11 @@ export const listAudiosHandler = async (
     .query("audio")
     .withIndex("by_project_id", (q) => q.eq("projectId", options.projectId))
     .order(options.sort ?? "desc")
-    .filter((q) => q.eq(q.field("uploaded"), options.uploaded ?? undefined))
+    .filter((q) =>
+      options.uploaded !== undefined
+        ? q.eq(q.field("uploaded"), options.uploaded)
+        : true,
+    )
     .paginate(options.paginationOpts);
 
   const page = await Promise.all(

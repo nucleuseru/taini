@@ -1,19 +1,14 @@
 "use client";
 
+import { Media, MediaModal } from "@/components/media-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { api } from "@repo/convex/api";
-import { Doc, Id } from "@repo/convex/dataModel";
+import { Id } from "@repo/convex/dataModel";
 import { usePaginatedQuery } from "convex/react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { MediaModal } from "./media-modal";
-
-export type Media = { url?: string | null } & (
-  | ({ type: "image" } & Doc<"image">)
-  | ({ type: "video" } & Doc<"video">)
-);
 
 export function MediaFeed() {
   const params = useParams();
