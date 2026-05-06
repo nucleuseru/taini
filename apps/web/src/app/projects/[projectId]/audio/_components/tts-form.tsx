@@ -67,7 +67,7 @@ export function TTSForm({ open, onOpenChange }: TTSFormProps) {
       toast.success("Audio generation queued");
       form.reset();
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to generate audio");
     }
   });
@@ -75,7 +75,7 @@ export function TTSForm({ open, onOpenChange }: TTSFormProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="md:max-w-xl">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Generate Speech</DialogTitle>
             <DialogDescription>
@@ -83,8 +83,11 @@ export function TTSForm({ open, onOpenChange }: TTSFormProps) {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4 px-4 md:px-0">
+          <form
+            onSubmit={(e) => void onSubmit(e)}
+            className="flex flex-col gap-4"
+          >
+            <div className="grid grid-cols-2 gap-4">
               <Controller
                 name="title"
                 control={form.control}
@@ -122,10 +125,7 @@ export function TTSForm({ open, onOpenChange }: TTSFormProps) {
               name="text"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field
-                  data-invalid={fieldState.invalid}
-                  className="px-4 md:px-0"
-                >
+                <Field data-invalid={fieldState.invalid}>
                   <Textarea
                     {...field}
                     placeholder="Type or paste your script here..."

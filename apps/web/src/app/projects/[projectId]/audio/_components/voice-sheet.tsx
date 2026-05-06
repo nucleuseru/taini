@@ -2,6 +2,7 @@
 
 import { AudioPlayerButton } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -14,21 +15,23 @@ import { cn } from "@/lib/utils";
 import { api } from "@repo/convex/api";
 import { Doc, Id } from "@repo/convex/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { CheckIcon, MusicIcon, Trash2Icon } from "lucide-react";
+import { MusicIcon, Trash2Icon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
+export interface VoiceSheetProps {
+  open: boolean;
+  selectedVoiceId?: Id<"voice"> | null;
+  onOpenChange: (open: boolean) => void;
+  onSelect: (voice: Doc<"voice">) => void;
+}
+
 export function VoiceSheet({
   open,
+  onSelect,
   onOpenChange,
   selectedVoiceId,
-  onSelect,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedVoiceId?: Id<"voice"> | null;
-  onSelect: (voice: Doc<"voice">) => void;
-}) {
+}: VoiceSheetProps) {
   const params = useParams();
   const projectId = params.projectId as Id<"project">;
 
@@ -39,16 +42,14 @@ export function VoiceSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-[400px] border-none bg-[#1a1a1a] text-[#e5e2e1] shadow-2xl sm:max-w-[540px]">
+      <SheetContent>
         <SheetHeader>
-          <SheetTitle className="font-headline text-2xl tracking-tight text-[#e5e2e1]">
-            Voice Library
-          </SheetTitle>
+          <SheetTitle>Voice Library</SheetTitle>
           <SheetDescription className="sr-only">
             All voice prompts used to generate audio
           </SheetDescription>
         </SheetHeader>
-        <div className="custom-scrollbar mt-8 flex max-h-[calc(100vh-120px)] flex-col gap-3 overflow-y-auto">
+        <ScrollArea className="h-[calc(100svh-72px)]">
           {voices
             ? voices.page.map((voice) => (
                 <VoiceCard
@@ -76,7 +77,7 @@ export function VoiceSheet({
               </p>
             </div>
           )}
-        </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
@@ -98,7 +99,7 @@ function VoiceCard({
     try {
       await removeVoice({ id: voice._id });
       toast.success("Voice removed");
-    } catch (error) {
+    } catch {
       toast.error("Failed to remove voice");
     }
   };
@@ -106,8 +107,8 @@ function VoiceCard({
   return (
     <div
       className={cn(
-        "group relative flex cursor-pointer items-center justify-between border-b border-white/2 p-3.5 transition-all duration-200 hover:bg-white/2",
-        isSelected && "bg-white/4 px-4",
+        "group relative flex cursor-pointer items-center justify-between border-b border-white/2 px-6 py-3 transition-all duration-200 hover:bg-white/2",
+        isSelected && "bg-white/4 px-6.5",
       )}
       onClick={onSelect}
     >
@@ -131,31 +132,23 @@ function VoiceCard({
           <span className="text-sm font-medium tracking-tight text-[#e5e2e1]/90">
             {voice.name}
           </span>
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "text-[9px] font-bold tracking-widest uppercase opacity-40",
-                voice.status === "completed" && "text-[#efcb61] opacity-70",
-              )}
-            >
-              {voice.status}
-            </span>
-            {isSelected && (
-              <span className="h-1 w-1 rounded-full bg-[#efcb61]" />
+          <div
+            className={cn(
+              "text-[9px] font-bold tracking-widest uppercase opacity-40",
+              voice.status === "completed" && "text-[#efcb61] opacity-70",
             )}
+          >
+            {voice.status}
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5 pr-2">
-        {isSelected && (
-          <CheckIcon size={12} className="text-[#efcb61] opacity-80" />
-        )}
         <Button
           size="icon"
           variant="ghost"
           className="h-7 w-7 text-red-400"
-          onClick={onDelete}
+          onClick={(e) => void onDelete(e)}
         >
           <Trash2Icon size={12} />
         </Button>

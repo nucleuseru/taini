@@ -39,10 +39,10 @@ export function ElementDetailsAddReferenceModal() {
                 <Upload size={20} className="text-[#efcb61]" />
               )}
             </div>
-            <DialogTitle className="font-headline text-2xl font-bold tracking-tight text-white">
+            <DialogTitle>
               {isGenerating ? "Generate Reference" : "Upload Reference"}
             </DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed text-[#e5e2e1]/40">
+            <DialogDescription>
               {isGenerating
                 ? "Define the conceptual metadata for this generated reference asset."
                 : "Provide a context for this reference image upload."}

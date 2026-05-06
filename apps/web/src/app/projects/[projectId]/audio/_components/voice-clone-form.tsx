@@ -64,14 +64,14 @@ export function VoiceCloneForm({ open, onOpenChange }: VoiceCloneFormProps) {
       toast.success("Voice cloning queued");
       form.reset();
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to clone voice");
     }
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="md:max-w-xl">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Clone a Voice</DialogTitle>
           <DialogDescription>
@@ -79,8 +79,11 @@ export function VoiceCloneForm({ open, onOpenChange }: VoiceCloneFormProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 md:px-0">
+        <form
+          onSubmit={(e) => void onSubmit(e)}
+          className="flex flex-col gap-4"
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Controller
               name="name"
               control={form.control}

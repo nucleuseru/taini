@@ -83,13 +83,9 @@ export function ElementDetailsReferenceImageDetails() {
 
           <div className="flex flex-1 flex-col p-8">
             <DialogHeader className="mb-8 space-y-3">
-              <DialogTitle className="font-headline text-2xl font-bold tracking-tight text-white">
-                {selectedRef?.name}
-              </DialogTitle>
+              <DialogTitle>{selectedRef?.name}</DialogTitle>
               {selectedRef?.description && (
-                <DialogDescription className="text-base leading-relaxed text-[#e5e2e1]/60">
-                  {selectedRef.description}
-                </DialogDescription>
+                <DialogDescription>{selectedRef.description}</DialogDescription>
               )}
             </DialogHeader>
 

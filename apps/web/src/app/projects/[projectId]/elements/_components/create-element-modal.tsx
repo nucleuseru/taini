@@ -114,10 +114,8 @@ export function CreateElementModal() {
         >
           <form onSubmit={(e) => void onSubmit(e)} className="p-6">
             <DialogHeader className="pb-6">
-              <DialogTitle className="font-headline text-2xl font-bold tracking-tight text-white">
-                Initialize Element
-              </DialogTitle>
-              <DialogDescription className="text-sm leading-relaxed text-[#e5e2e1]/40">
+              <DialogTitle>Initialize Element</DialogTitle>
+              <DialogDescription>
                 Begin by defining the core identity of your character,
                 environment, or item.
               </DialogDescription>
