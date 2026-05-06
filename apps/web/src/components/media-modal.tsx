@@ -8,19 +8,25 @@ import {
 } from "@/components/ui/drawer-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@repo/convex/api";
+import { Doc } from "@repo/convex/dataModel";
 import { useMutation } from "convex/react";
 import { DownloadIcon, Loader2Icon, SparklesIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Media } from "./media-feed";
+
+export type Media = { url?: string | null } & (
+  | ({ type: "image" } & Doc<"image">)
+  | ({ type: "video" } & Doc<"video">)
+);
 
 export interface MediaModelProps {
   media: Media;
   onClose: () => void;
+  extraActions?: React.ReactNode;
 }
 
-export function MediaModal({ media, onClose }: MediaModelProps) {
+export function MediaModal({ media, onClose, extraActions }: MediaModelProps) {
   const triggerImageInference = useMutation(api.image.triggerInference);
   const triggerVideoInference = useMutation(api.video.triggerInference);
   const [isTriggering, setIsTriggering] = useState(false);
@@ -138,6 +144,7 @@ export function MediaModal({ media, onClose }: MediaModelProps) {
             </div>
 
             <div className="mt-auto flex flex-col gap-2">
+              {extraActions}
               {media.url && (
                 <Button variant="ghost" asChild>
                   <a href={media.url} download={`${media.type}-${media._id}`}>

@@ -85,6 +85,16 @@ export const get = authQuery({
   handler: (ctx, args) => getVideoByIdHandler(ctx, args.id),
 });
 
+export const getMany = authQuery({
+  args: { ids: v.array(v.id("video")) },
+  handler: async (ctx, args) => {
+    const videos = await Promise.all(
+      args.ids.map((id) => getVideoByIdHandler(ctx, id)),
+    );
+    return videos.filter((vid) => vid !== null);
+  },
+});
+
 export const list = authQuery({
   args: ListVideoArgsValidator,
   handler: (ctx, args) => listVideosHandler(ctx, args),

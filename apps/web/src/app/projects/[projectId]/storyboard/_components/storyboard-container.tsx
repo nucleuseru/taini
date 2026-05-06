@@ -3,13 +3,15 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DragDropProvider, DragEndEvent } from "@dnd-kit/react";
 import { api } from "@repo/convex/api";
-import { Id } from "@repo/convex/dataModel";
+import { Doc, Id } from "@repo/convex/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { CreateStoryboardForm } from "./create-storyboard-form";
 import { SceneList } from "./scene-list";
-import { StoryboardActions } from "./storyboard-actions";
+
+type DragData =
+  | { type: "Scene"; scene: Doc<"scene"> }
+  | { type: "Shot"; shot: Doc<"shot"> };
 
 export function StoryboardContainer() {
   const params = useParams();
@@ -25,8 +27,8 @@ export function StoryboardContainer() {
 
     if (!target) return;
 
-    const sourceData = source.data as { type: string; scene?: any; shot?: any };
-    const targetData = target.data as { type: string; scene?: any; shot?: any };
+    const sourceData = source.data as DragData;
+    const targetData = target.data as DragData;
 
     if (sourceData.type === "Scene" && targetData.type === "Scene") {
       const scene = sourceData.scene;
@@ -55,30 +57,19 @@ export function StoryboardContainer() {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center space-y-4">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            No Storyboard Found
+          <h2 className="text-2xl font-semibold tracking-tight text-white/90">
+            Storyboard Void
           </h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Create a storyboard to map out your scenes and shots.
+          <p className="mt-1 text-sm text-white/40">
+            Initialize your storyboard to begin the alchemical process.
           </p>
         </div>
-        <CreateStoryboardForm projectId={projectId} />
       </div>
     );
   }
 
   return (
     <div className="flex h-full w-full flex-col space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Storyboard</h1>
-          <p className="text-muted-foreground text-sm">
-            Manage scenes, shots, and media generation.
-          </p>
-        </div>
-        <StoryboardActions projectId={projectId} />
-      </div>
-
       <DragDropProvider onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full pr-4">

@@ -4,10 +4,10 @@ import { useSortable } from "@dnd-kit/react/sortable";
 import { api } from "@repo/convex/api";
 import { Doc } from "@repo/convex/dataModel";
 import { useQuery } from "convex/react";
-import { GripVertical, Image as ImageIcon, Play } from "lucide-react";
+import { ImageIcon, Play } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { FrameSelector } from "./frame-selector";
+import { ShotSheet } from "./shot-sheet";
 
 export function ShotCard({
   shot,
@@ -37,14 +37,14 @@ export function ShotCard({
   );
 
   const [isHovered, setIsHovered] = useState(false);
-  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
     <>
       <div
         ref={ref}
         style={style}
-        className="group bg-background relative flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border shadow-sm transition-all hover:shadow-md"
+        className="group relative flex w-72 shrink-0 flex-col overflow-hidden rounded-md bg-white/3 transition-all hover:bg-white/5 active:scale-[0.98]"
         onMouseEnter={() => {
           setIsHovered(true);
         }}
@@ -53,17 +53,9 @@ export function ShotCard({
         }}
       >
         <div
-          ref={handleRef}
-          {...listeners}
-          className="bg-background/80 text-muted-foreground hover:text-foreground absolute top-2 left-2 z-10 cursor-grab rounded-md p-1 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 active:cursor-grabbing"
-        >
-          <GripVertical className="h-4 w-4" />
-        </div>
-
-        <div
-          className="bg-muted relative aspect-video w-full cursor-pointer"
+          className="bg-muted relative aspect-video w-full cursor-pointer overflow-hidden"
           onClick={() => {
-            setSelectorOpen(true);
+            setSheetOpen(true);
           }}
         >
           {isHovered && videoClip?.url ? (
@@ -80,47 +72,67 @@ export function ShotCard({
               src={startFrame.url}
               alt={shot.title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
             />
           ) : (
-            <div className="text-muted-foreground flex h-full w-full items-center justify-center">
-              <ImageIcon className="h-8 w-8 opacity-20" />
+            <div className="flex h-full w-full items-center justify-center bg-white/5">
+              <ImageIcon className="size-8 text-white/10" />
             </div>
           )}
 
-          {!isHovered && videoClip?.url && (
-            <div className="bg-background/80 absolute right-2 bottom-2 rounded-full p-1.5 backdrop-blur-sm">
-              <Play className="h-3 w-3 fill-current" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+
+          {videoClip?.url && (
+            <div className="absolute right-3 bottom-3 rounded-full bg-black/40 p-2 backdrop-blur-md">
+              <Play className="size-3 fill-[#efcb61] text-[#efcb61]" />
             </div>
           )}
         </div>
 
         <div
-          className="flex cursor-pointer flex-col gap-1 p-3"
+          className="flex cursor-pointer flex-col gap-1 p-4"
           onClick={() => {
-            setSelectorOpen(true);
+            setSheetOpen(true);
           }}
         >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              {shot.order}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold tracking-[0.2em] text-[#efcb61] uppercase">
+              Shot {shot.order}
             </span>
-            <span className="text-muted-foreground text-xs">
+            <span className="text-[10px] font-bold tracking-widest text-white/20 uppercase">
               {shot.duration}s
             </span>
           </div>
-          <h4 className="truncate leading-tight font-medium">{shot.title}</h4>
-          <p className="text-muted-foreground line-clamp-2 text-xs">
+          <h4 className="truncate text-sm font-semibold text-[#e5e2e1]">
+            {shot.title}
+          </h4>
+          <p className="line-clamp-2 text-[11px] leading-relaxed text-white/40">
             {shot.description}
           </p>
         </div>
+
+        <div
+          ref={handleRef}
+          {...listeners}
+          className="absolute top-2 left-2 z-10 cursor-grab rounded bg-black/40 p-1 opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-white/60"
+          >
+            <path
+              d="M6 3H7V4H6V3ZM9 3H10V4H9V3ZM6 6H7V7H6V6ZM9 6H10V7H9V6ZM6 9H7V10H6V9ZM9 9H10V10H9V9ZM6 12H7V13H6V12ZM9 12H10V13H9V12Z"
+              fill="currentColor"
+            />
+          </svg>
+        </div>
       </div>
 
-      <FrameSelector
-        open={selectorOpen}
-        onOpenChange={setSelectorOpen}
-        shot={shot}
-      />
+      <ShotSheet open={sheetOpen} onOpenChange={setSheetOpen} shot={shot} />
     </>
   );
 }
