@@ -72,7 +72,7 @@ If you can batch operations by the tools given to you, batch them to increase sp
 `;
 
 export const CREATE_VOICEOVER_DIALOGUE_PROMPT = `
-You are responsible for writing VOICEOVER and DIALOGUE for a film.
+You are responsible for writing VOICEOVER for a film.
 
 INPUT CONTEXT:
 - Film tone, genre, and audience
@@ -83,20 +83,11 @@ INPUT CONTEXT:
 -------------------------------------
 OBJECTIVE
 -------------------------------------
-Produce dialogue and/or voiceover that is:
+Produce voiceover that is:
 - Cinematic
 - Character-driven
 - Subtext-rich
 - Efficient (no unnecessary exposition)
-
--------------------------------------
-DIALOGUE WRITING RULES
--------------------------------------
-- Each line must reflect character personality and intent
-- Avoid on-the-nose exposition
-- Use subtext where possible
-- Keep lines concise and natural for spoken delivery
-- Ensure rhythm and flow between speakers
 
 -------------------------------------
 VOICEOVER RULES
@@ -115,10 +106,6 @@ SCENE: [Name / Identifier]
 
 EMOTIONAL OBJECTIVE:
 - What the audience should feel
-
-DIALOGUE:
-Character Name: Line
-Character Name: Line
 
 VOICEOVER (if applicable):
 - Clearly labeled
@@ -143,6 +130,13 @@ CONSTRAINTS
 Output must be ready for actors and voice performers.
 
 If you can batch operations by the tools given to you, batch them to increase speed
+
+From the script, if there is Narration text present, extract to the Narrator text,
+use that to create one audio where the narrator says everything from start to finish
+in one audio. this is only applicable if the narrator text exist in the script.
+When extracting, use proper paragraphs, punctuations, and dots to guide the narrator tone
+and directions. Remove unnecessary - and make sure punctuations are used properly an don't change the narration.
+Use proper structure and flow
 `;
 
 export const CREATE_SHOT_SCENE_PROMPT = `
@@ -170,22 +164,6 @@ Define:
 - Emotional progression (start → escalation → resolution)
 
 -------------------------------------
-SHOT LIST REQUIREMENTS
--------------------------------------
-For EACH shot, specify:
-
-1. Shot ID
-2. Shot Type (wide, medium, close-up, insert, etc.)
-3. Camera Angle (eye-level, low, high, over-the-shoulder, etc.)
-4. Camera Movement (static, pan, tilt, dolly, handheld, etc.)
-5. Framing & Composition (rule of thirds, symmetry, depth)
-6. Subject / Action (what happens in the shot)
-7. Dialogue / Audio (if present)
-8. Lighting (quality, direction, motivation)
-9. Duration (approximate timing or pacing intent)
-10. Narrative Purpose (why this shot exists)
-
--------------------------------------
 COVERAGE STRATEGY
 -------------------------------------
 Ensure:
@@ -195,13 +173,6 @@ Ensure:
 - Continuity between shots
 
 -------------------------------------
-VISUAL DIRECTION
--------------------------------------
-- Maintain consistent color palette and lighting logic
-- Use camera movement intentionally (not randomly)
-- Reinforce emotion through framing and motion
-
--------------------------------------
 CONSTRAINTS
 -------------------------------------
 - Shots must be physically shootable
@@ -209,9 +180,17 @@ CONSTRAINTS
 - Keep pacing aligned with emotional tone
 - Optimize for editing flexibility
 
-This output must be directly usable by a cinematographer and editor.
-
 If you can batch operations by the tools given to you, batch them to increase speed
+if the narrot script is available, with timestamps use that to guide the shot duration decision
+  shot count and scene count. ensure that the total duration of shots in a project is equal or greater
+than the timestamp duration, only if applicable.
+
+When adding first frames to shot, don't use illustrational images, use illustrational to guide the first frame image prompt
+  as it supports multi image reference generation. the ensure the first frame image, which will be use as the video startFrame,
+will have enough context and info to generate a good video first frame.
+Ensure images and videos exist in all shots. DO NOT HALLUCINATE
+MAKE SURE THE TOTAL SHOT DURATIONS IS EQUIVALENT TO THE TIMESTAMP TOTAL DURATION, IF APPLICABLE
+shot duration can range from 4s - 20s
 `;
 
 export const SYSTEM_PROMPT = `
