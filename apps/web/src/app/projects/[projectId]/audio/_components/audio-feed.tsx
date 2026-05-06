@@ -59,7 +59,8 @@ export function AudioFeed() {
           No audio yet
         </h3>
         <p className="text-muted-foreground mt-2 max-w-xs text-sm opacity-50">
-          Start by generating some speech or cloning a voice.
+          Start by generating some speech or cloning a voice by clicking the
+          button on the top right corner.
         </p>
       </div>
     );

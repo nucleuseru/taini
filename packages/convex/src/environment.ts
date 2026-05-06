@@ -18,6 +18,9 @@ export const UpdateEnvironmentArgsValidator = v.object({
   id: v.id("environment"),
   name: v.optional(EnvironmentFields.name),
   description: v.optional(EnvironmentFields.description),
+  referenceImages: v.optional(
+    v.array(v.object(EnvironmentFields.referenceImages.element.fields)),
+  ),
 });
 
 export const AddEnvironmentReferenceImagesArgsValidator = v.object({

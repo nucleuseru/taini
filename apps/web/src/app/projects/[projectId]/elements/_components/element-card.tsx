@@ -4,7 +4,7 @@ import { api } from "@repo/convex/api";
 import { useQuery } from "convex/react";
 import { MountainIcon, PackageIcon, UserIcon, Zap } from "lucide-react";
 import Image from "next/image";
-import { Element } from "./element-details-sheet/types";
+import { Element } from "./element-details-sheet";
 
 export type ElementCardProps = Element & {
   onClick: () => void;

@@ -18,6 +18,9 @@ export const UpdateItemArgsValidator = v.object({
   id: v.id("item"),
   name: v.optional(ItemFields.name),
   description: v.optional(ItemFields.description),
+  referenceImages: v.optional(
+    v.array(v.object(ItemFields.referenceImages.element.fields)),
+  ),
 });
 
 export const AddItemReferenceImagesArgsValidator = v.object({

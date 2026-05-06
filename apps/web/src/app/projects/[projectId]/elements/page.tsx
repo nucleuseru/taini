@@ -1,7 +1,10 @@
 import { Navbar } from "@/components/navbar";
 import { Suspense } from "react";
 import { ProjectTabs, ProjectTabsSkeleton } from "../_components/project-tabs";
-import { CreateElementModal } from "./_components/create-element-modal";
+import {
+  ElementActions,
+  ElementActionsSkeleton,
+} from "./_components/element-actions";
 import {
   ElementsFeed,
   ElementsFeedSkeleton,
@@ -9,23 +12,22 @@ import {
 
 export default function ElementsPage() {
   return (
-    <>
+    <main className="min-h-full pt-16 pb-24">
       <Navbar
         CenterComponent={
           <Suspense fallback={<ProjectTabsSkeleton />}>
             <ProjectTabs />
           </Suspense>
         }
+        RightComponent={
+          <Suspense fallback={<ElementActionsSkeleton />}>
+            <ElementActions />
+          </Suspense>
+        }
       />
-      <main className="flex min-h-full w-full flex-col items-center pb-24">
-        <Suspense fallback={<ElementsFeedSkeleton />}>
-          <ElementsFeed />
-        </Suspense>
-
-        <Suspense>
-          <CreateElementModal />
-        </Suspense>
-      </main>
-    </>
+      <Suspense fallback={<ElementsFeedSkeleton />}>
+        <ElementsFeed />
+      </Suspense>
+    </main>
   );
 }
