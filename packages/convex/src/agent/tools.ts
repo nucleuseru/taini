@@ -4,7 +4,7 @@ import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 import { RunMutationCtx, RunQueryCtx, sleep } from "../utils";
 
-export const DELAY = 5000;
+export const DELAY = 500;
 
 // --- Image Tools ---
 
@@ -48,7 +48,7 @@ export const generateImagesTool = (
           prompt: z.string().describe("The prompt to generate the image"),
           illustration: z
             .boolean()
-            .describe("Whether this is a character or an environment"),
+            .describe("Whether this is a character, environment or item/prop"),
           referenceImages: z
             .array(z.string())
             .optional()
