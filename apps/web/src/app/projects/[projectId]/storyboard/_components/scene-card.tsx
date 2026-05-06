@@ -19,10 +19,12 @@ export function SceneCard({
   scene: Doc<"scene">;
   index: number;
 }) {
-  const { listeners, ref, handleRef, isDragging } = useSortable({
-    id: `scene-${scene._id}`,
+  const { ref, handleRef, isDragging } = useSortable({
     index,
-    data: { type: "Scene", scene },
+    id: scene._id,
+    type: "scene",
+    accept: ["scene", "shot"],
+    data: { type: "scene", scene },
   });
 
   const style = {
@@ -33,14 +35,13 @@ export function SceneCard({
     <div
       ref={ref}
       style={style}
-      className="flex flex-col overflow-hidden rounded-xl bg-white/3 transition-colors hover:bg-white/[0.04]"
+      className="flex w-[80vw] shrink-0 flex-col overflow-hidden rounded-xl bg-white/3 transition-colors hover:bg-white/[0.04]"
     >
       <div className="flex items-stretch">
         {/* Handle and Scene Actions */}
         <div className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-white/5 bg-white/3 py-4">
           <div
             ref={handleRef}
-            {...listeners}
             className="cursor-grab text-white/20 transition-colors hover:text-white/60 active:cursor-grabbing"
           >
             <svg

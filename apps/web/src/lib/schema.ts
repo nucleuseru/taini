@@ -34,12 +34,12 @@ export const ReferenceImageSchema = z.object({
 });
 
 export const CreateStoryboardFormSchema = z.object({
-  script: z.string().min(1, ERROR_MESSAGE.REQUIRED),
-  width: z.coerce.number().min(256).max(2048).default(1920),
-  height: z.coerce.number().min(256).max(2048).default(1080),
-  frameRate: z.enum(["24", "30", "60"]).default("24"),
   style: z.string().optional(),
-  audio: z.boolean().default(true),
+  audio: z.boolean().optional(),
+  script: z.string().min(1, ERROR_MESSAGE.REQUIRED),
+  frameRate: z.enum(["24", "30", "60"]).optional(),
+  width: z.coerce.number().min(256).max(2048).optional(),
+  height: z.coerce.number().min(256).max(2048).optional(),
 });
 
 export const AddReferenceSchema = ReferenceImageSchema.extend({

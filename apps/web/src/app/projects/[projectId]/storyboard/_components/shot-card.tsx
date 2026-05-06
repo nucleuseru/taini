@@ -9,21 +9,23 @@ import Image from "next/image";
 import { useState } from "react";
 import { ShotSheet } from "./shot-sheet";
 
-export function ShotCard({
-  shot,
-  index,
-}: {
-  shot: Doc<"shot">;
+export interface ShotCardProps {
   index: number;
-}) {
-  const { listeners, ref, handleRef, isDragging } = useSortable({
-    id: `shot-${shot._id}`,
+  shot: Doc<"shot">;
+}
+
+export function ShotCard({ shot, index }: ShotCardProps) {
+  const { ref, handleRef, isDragging } = useSortable({
     index,
-    data: { type: "Shot", shot },
+    id: shot._id,
+    type: "shot",
+    accept: "shot",
+    group: shot.sceneId,
+    data: { type: "shot", shot },
   });
 
   const style = {
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0 : 1,
   };
 
   const startFrame = useQuery(
@@ -71,8 +73,9 @@ export function ShotCard({
             <Image
               src={startFrame.url}
               alt={shot.title}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              width={startFrame.width ?? 1024}
+              height={startFrame.height ?? 1024}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-white/5">
@@ -113,7 +116,6 @@ export function ShotCard({
 
         <div
           ref={handleRef}
-          {...listeners}
           className="absolute top-2 left-2 z-10 cursor-grab rounded bg-black/40 p-1 opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100 active:cursor-grabbing"
         >
           <svg

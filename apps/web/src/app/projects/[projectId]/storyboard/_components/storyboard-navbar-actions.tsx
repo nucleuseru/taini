@@ -30,7 +30,7 @@ import { CreateStoryboardFormSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@repo/convex/api";
 import { Id } from "@repo/convex/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import {
   Download,
   Flame,
@@ -38,9 +38,9 @@ import {
   Loader2,
   Mic2,
   MoreVertical,
+  Package,
   Plus,
   Settings,
-  UserPlus,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -52,7 +52,7 @@ const LABEL_CLASS =
 const INPUT_CLASS =
   "h-11 border-none bg-white/3 text-sm font-medium tracking-wide text-[#e5e2e1] transition-colors focus:bg-white/6";
 const TEXTAREA_CLASS =
-  "min-h-[120px] border-none bg-white/3 text-sm leading-relaxed font-medium tracking-wide text-[#e5e2e1] transition-colors focus:bg-white/6";
+  "h-[120px] border-none bg-white/3 text-sm leading-relaxed font-medium tracking-wide text-[#e5e2e1] transition-colors focus:bg-white/6";
 
 export function StoryboardNavbarActions() {
   const params = useParams();
@@ -60,9 +60,22 @@ export function StoryboardNavbarActions() {
   const storyboard = useQuery(api.storyboard.getByProject, { projectId });
   const [open, setOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isExtractingVoiceovers, setIsExtractingVoiceovers] = useState(false);
+  const [isExtractingElements, setIsExtractingElements] = useState(false);
+  const [isComposingScenes, setIsComposingScenes] = useState(false);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
   const createStoryboard = useMutation(api.storyboard.create);
   const updateStoryboard = useMutation(api.storyboard.update);
+  const exportStoryboard = useQuery(api.storyboard.exportData, { projectId });
+
+  const extractVoiceovers = useAction(api.agent.createVoiceOverDialogue);
+  const extractElements = useAction(
+    api.agent.createCharactersEnvironmentsItems,
+  );
+  const composeScenes = useAction(api.agent.createShotsScenes);
+  const generateFullStoryboard = useAction(api.agent.createFullStoryboard);
 
   const form = useForm({
     resolver: zodResolver(CreateStoryboardFormSchema),
@@ -109,6 +122,83 @@ export function StoryboardNavbarActions() {
       toast.error("Failed to save storyboard");
     }
   });
+
+  const onExport = async () => {
+    try {
+      setIsExporting(true);
+      if (!exportStoryboard) {
+        toast.error("No storyboard data to export");
+        return;
+      }
+      const dataStr = JSON.stringify(exportStoryboard, null, 2);
+      const dataUri =
+        "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+      const exportFileDefaultName = `storyboard-${projectId}.json`;
+
+      const linkElement = document.createElement("a");
+      linkElement.setAttribute("href", dataUri);
+      linkElement.setAttribute("download", exportFileDefaultName);
+      linkElement.click();
+      toast.success("Project exported successfully");
+    } catch {
+      toast.error("Failed to export project");
+    } finally {
+      setIsExporting(false);
+      setPopoverOpen(false);
+    }
+  };
+
+  const onExtractVoiceovers = async () => {
+    try {
+      setIsExtractingVoiceovers(true);
+      await extractVoiceovers({ projectId });
+      toast.success("Voiceover extraction started");
+    } catch {
+      toast.error("Failed to start voiceover extraction");
+    } finally {
+      setIsExtractingVoiceovers(false);
+      setPopoverOpen(false);
+    }
+  };
+
+  const onExtractElements = async () => {
+    try {
+      setIsExtractingElements(true);
+      await extractElements({ projectId });
+      toast.success("Element extraction started");
+    } catch {
+      toast.error("Failed to start element extraction");
+    } finally {
+      setIsExtractingElements(false);
+      setPopoverOpen(false);
+    }
+  };
+
+  const onComposeScenes = async () => {
+    try {
+      setIsComposingScenes(true);
+      await composeScenes({ projectId });
+      toast.success("Scene composition started");
+    } catch {
+      toast.error("Failed to start scene composition");
+    } finally {
+      setIsComposingScenes(false);
+      setPopoverOpen(false);
+    }
+  };
+
+  const onGenerateAll = async () => {
+    try {
+      setIsGeneratingAll(true);
+      await generateFullStoryboard({ projectId });
+      toast.success("Full generation sequence started");
+    } catch {
+      toast.error("Failed to start full generation");
+    } finally {
+      setIsGeneratingAll(false);
+      setPopoverOpen(false);
+    }
+  };
 
   if (storyboard === undefined)
     return <div className="size-8 animate-pulse rounded-full bg-white/5" />;
@@ -181,6 +271,7 @@ export function StoryboardNavbarActions() {
                             type="number"
                             id={field.name}
                             className={INPUT_CLASS}
+                            value={Number(field.value)}
                           />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
@@ -204,6 +295,7 @@ export function StoryboardNavbarActions() {
                             type="number"
                             id={field.name}
                             className={INPUT_CLASS}
+                            value={Number(field.value)}
                           />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
@@ -345,27 +437,67 @@ export function StoryboardNavbarActions() {
               <Settings size={14} className="text-white/40" />
               Technical Specs
             </button>
-            <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:bg-white/5">
-              <Download size={14} className="text-white/40" />
+            <button
+              onClick={onExport}
+              disabled={isExporting}
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:bg-white/5 disabled:opacity-50"
+            >
+              {isExporting ? (
+                <Loader2 size={14} className="animate-spin text-white/40" />
+              ) : (
+                <Download size={14} className="text-white/40" />
+              )}
               Export Project
             </button>
             {storyboard.audio && (
-              <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:bg-white/5">
-                <Mic2 size={14} className="text-[#efcb61]" />
+              <button
+                onClick={onExtractVoiceovers}
+                disabled={isExtractingVoiceovers}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:bg-white/5 disabled:opacity-50"
+              >
+                {isExtractingVoiceovers ? (
+                  <Loader2 size={14} className="animate-spin text-[#efcb61]" />
+                ) : (
+                  <Mic2 size={14} className="text-[#efcb61]" />
+                )}
                 Extract Voiceovers
               </button>
             )}
-            <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:bg-white/5">
-              <UserPlus size={14} className="text-white/40" />
-              Extract Characters
+            <button
+              onClick={onExtractElements}
+              disabled={isExtractingElements}
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:bg-white/5 disabled:opacity-50"
+            >
+              {isExtractingElements ? (
+                <Loader2 size={14} className="animate-spin text-white/40" />
+              ) : (
+                <Package size={14} className="text-white/40" />
+              )}
+              Extract Elements
             </button>
-            <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:bg-white/5">
-              <LayoutGrid size={14} className="text-white/40" />
+            <button
+              onClick={onComposeScenes}
+              disabled={isComposingScenes}
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:bg-white/5 disabled:opacity-50"
+            >
+              {isComposingScenes ? (
+                <Loader2 size={14} className="animate-spin text-white/40" />
+              ) : (
+                <LayoutGrid size={14} className="text-white/40" />
+              )}
               Compose Scenes
             </button>
             <div className="my-1 h-px bg-white/5" />
-            <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-bold text-[#efcb61] transition-colors hover:bg-white/5">
-              <Flame size={14} />
+            <button
+              onClick={onGenerateAll}
+              disabled={isGeneratingAll}
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-bold text-[#efcb61] transition-colors hover:bg-white/5 disabled:opacity-50"
+            >
+              {isGeneratingAll ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Flame size={14} />
+              )}
               Generate All
             </button>
           </div>
@@ -424,6 +556,7 @@ export function StoryboardNavbarActions() {
                           type="number"
                           id={field.name}
                           className={INPUT_CLASS}
+                          value={Number(field.value)}
                         />
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -447,6 +580,7 @@ export function StoryboardNavbarActions() {
                           type="number"
                           id={field.name}
                           className={INPUT_CLASS}
+                          value={Number(field.value)}
                         />
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />

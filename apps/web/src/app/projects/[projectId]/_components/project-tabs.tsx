@@ -7,7 +7,7 @@ import {
   AudioLinesIcon,
   ImageIcon,
   NotebookIcon,
-  User2Icon,
+  PackageIcon,
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -19,7 +19,7 @@ const getTabs = (projectId: string) => [
   {
     name: "Elements",
     href: `/projects/${projectId}/elements`,
-    icon: User2Icon,
+    icon: PackageIcon,
   },
   {
     name: "Storyboard",

@@ -18,15 +18,13 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export function ShotSheet({
-  open,
-  onOpenChange,
-  shot,
-}: {
+export interface ShotSheetProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
   shot: Doc<"shot">;
-}) {
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ShotSheet({ open, onOpenChange, shot }: ShotSheetProps) {
   const updateShot = useMutation(api.shot.update);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
 
@@ -37,7 +35,7 @@ export function ShotSheet({
     ids: shot.endFrames ?? [],
   });
   const videoClips = useQuery(api.video.getMany, {
-    ids: (shot.videoClips ?? []) as Id<"video">[],
+    ids: shot.videoClips ?? [],
   });
 
   const handleSelectFrame = async (
@@ -64,14 +62,14 @@ export function ShotSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="flex w-full flex-col border-none bg-[#131313] p-0 sm:max-w-xl">
-          <SheetHeader className="p-6 pb-0">
+        <SheetContent className="w-full! md:w-auto!">
+          <SheetHeader>
             <div className="flex items-center justify-between">
               <div>
-                <SheetTitle className="text-xl font-bold tracking-tight text-[#e5e2e1]">
+                <SheetTitle>
                   Shot {shot.order}: {shot.title}
                 </SheetTitle>
-                <SheetDescription className="mt-1 text-white/40">
+                <SheetDescription className="mt-1">
                   Manage variants and select keyframes for production.
                 </SheetDescription>
               </div>

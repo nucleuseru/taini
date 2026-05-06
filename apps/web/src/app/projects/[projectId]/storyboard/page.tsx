@@ -1,12 +1,14 @@
 import { Navbar } from "@/components/navbar";
 import { Suspense } from "react";
 import { ProjectTabs, ProjectTabsSkeleton } from "../_components/project-tabs";
-import { StoryboardContainer } from "./_components/storyboard-container";
+import {
+  StoryboardContainer,
+  StoryboardSkeleton,
+} from "./_components/storyboard-container";
 import {
   StoryboardNavbarActions,
   StoryboardNavbarActionsSkeleton,
 } from "./_components/storyboard-navbar-actions";
-import { StoryboardSkeleton } from "./_components/storyboard-skeleton";
 
 export default function StoryboardPage() {
   return (

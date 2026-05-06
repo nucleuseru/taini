@@ -6,11 +6,6 @@ import { useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { SceneCard } from "./scene-card";
 
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/react/sortable";
-
 export function SceneList({
   storyboardId,
 }: {
@@ -36,15 +31,11 @@ export function SceneList({
     );
   }
 
-  const sceneIds = scenes.map((s) => `scene-${s._id}`);
-
   return (
-    <SortableContext items={sceneIds} strategy={verticalListSortingStrategy}>
-      <div className="flex flex-col gap-8 pb-24">
-        {scenes.map((scene, index) => (
-          <SceneCard key={scene._id} scene={scene} index={index} />
-        ))}
-      </div>
-    </SortableContext>
+    <div className="flex flex-col gap-8 pb-24">
+      {scenes.map((scene, index) => (
+        <SceneCard key={scene._id} scene={scene} index={index} />
+      ))}
+    </div>
   );
 }

@@ -6,11 +6,6 @@ import { useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { ShotCard } from "./shot-card";
 
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-} from "@dnd-kit/react/sortable";
-
 export function ShotList({ sceneId }: { sceneId: Id<"scene"> }) {
   const shots = useQuery(api.shot.list, { sceneId });
 
@@ -30,13 +25,7 @@ export function ShotList({ sceneId }: { sceneId: Id<"scene"> }) {
     );
   }
 
-  const shotIds = shots.map((s) => `shot-${s._id}`);
-
-  return (
-    <SortableContext items={shotIds} strategy={horizontalListSortingStrategy}>
-      {shots.map((shot, index) => (
-        <ShotCard key={shot._id} shot={shot} index={index} />
-      ))}
-    </SortableContext>
-  );
+  return shots.map((shot, index) => (
+    <ShotCard key={shot._id} shot={shot} index={index} />
+  ));
 }
