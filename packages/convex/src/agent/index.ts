@@ -22,7 +22,7 @@ export const createAgent = (
 
   return new Agent(components.agent, {
     name: options.name ?? "FILM DIRECTOR",
-    stopWhen: stepCountIs(200),
+    stopWhen: stepCountIs(15),
     instructions: SYSTEM_PROMPT,
     languageModel: google.chat("gemini-3.1-flash-lite-preview"),
     contextHandler: (_, args) => {

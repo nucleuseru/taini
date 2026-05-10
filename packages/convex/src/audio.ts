@@ -178,7 +178,7 @@ export const inferenceTts = internalAction({
     text: v.string(),
     ref_text: v.optional(v.string()),
     ref_audio: v.optional(v.string()),
-    voice_clone_prompt: v.optional(v.string()),
+    voice_clone_prompt: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const { id: audioId, ...input } = args;
@@ -343,7 +343,7 @@ triggers.register("audio", async (ctx, change) => {
       await ctx.scheduler.runAfter(0, internal.audio.inferenceTts, {
         id: change.id,
         text: change.newDoc.text,
-        voice_clone_prompt: voiceClonePrompt,
+        voice_clone_prompt: [voiceClonePrompt],
       });
     } else {
       await ctx.db.patch(change.id, { ttsStatus: "failed" });
