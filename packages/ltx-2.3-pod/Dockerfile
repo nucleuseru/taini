@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends git python3 pyt
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/Lightricks/LTX-2.git ./ \
-    && uv sync --frozen --index pytorch --index nvidia --extra xformers
+    && uv sync --frozen --index pytorch --index nvidia
 
 ENV PATH="/app/.venv/bin:$PATH"
 
