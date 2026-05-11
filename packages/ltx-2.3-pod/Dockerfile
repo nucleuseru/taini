@@ -9,7 +9,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends git python3 python3-dev build-essential \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl zip unzip jq git python3 python3-dev build-essential \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/Lightricks/LTX-2.git ./ \
