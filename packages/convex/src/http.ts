@@ -2,12 +2,19 @@ import { httpRouter } from "convex/server";
 import * as Audio from "./audio";
 import { authComponent, createAuth } from "./auth";
 import * as Image from "./image";
+import { generateUploadUrl } from "./upload";
 import * as Video from "./video";
 import * as Voice from "./voice";
 
 const http = httpRouter();
 
 authComponent.registerRoutes(http, createAuth);
+
+http.route({
+  path: "/generate-upload-url",
+  method: "GET",
+  handler: generateUploadUrl,
+});
 
 http.route({
   path: "/webhook/image",
