@@ -3,6 +3,8 @@ from typing import Optional, Union, List, Literal
 
 
 class InputSchema(BaseModel):
+    convex_url: str
+    upload_url_fn: str
     x_vector_only_mode: Union[bool, List[bool]] = False
     ref_text: Optional[Union[str, List[Optional[str]]]] = None
     task: Union[Literal["generate"], Literal["create_prompt"]] = "generate"
