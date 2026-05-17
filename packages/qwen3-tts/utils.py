@@ -1,4 +1,3 @@
-import os
 import io
 import torch
 import requests
@@ -6,8 +5,6 @@ import soundfile as sf
 from dataclasses import asdict
 from convex import ConvexClient
 from qwen_tts import VoiceClonePromptItem
-
-client = ConvexClient(os.getenv("CONVEX_URL"))
 
 
 def download_prompt_item(url: str, device: str = "cuda:0") -> VoiceClonePromptItem:
@@ -18,7 +15,7 @@ def download_prompt_item(url: str, device: str = "cuda:0") -> VoiceClonePromptIt
     return VoiceClonePromptItem(**prompt_dict)
 
 
-def upload_prompt_item(prompt_item: VoiceClonePromptItem) -> str:
+def upload_prompt_item(client: ConvexClient, prompt_item: VoiceClonePromptItem) -> str:
     buffer = io.BytesIO()
     torch.save(asdict(prompt_item), buffer)
     buffer.seek(0)
@@ -34,7 +31,7 @@ def upload_prompt_item(prompt_item: VoiceClonePromptItem) -> str:
     return response.json().get("storageId")
 
 
-def upload_audio(wav, sr):
+def upload_audio(client: ConvexClient, wav, sr):
     buffer = io.BytesIO()
     sf.write(buffer, wav, sr, format="WAV")
     buffer.seek(0)

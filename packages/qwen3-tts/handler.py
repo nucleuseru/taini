@@ -3,6 +3,7 @@ import torch
 import runpod
 import asyncio
 import threading
+from convex import ConvexClient
 from qwen_tts import Qwen3TTSModel
 from utils import download_prompt_item, upload_prompt_item, upload_audio
 from schema import InputSchema, VoiceCloneInputSchema, GenerateInputSchema
@@ -28,6 +29,10 @@ def run_inference(job):
     Run inference in a separate thread to avoid blocking the event loop.
     Uses a GPU semaphore to manage concurrent access to the model.
     """
+    client = ConvexClient(
+        job["convex_url"] if "convex_url" in job else os.getenv("CONVEX_URL")
+    )
+
     with gpu_semaphore:
         # Validate base input and identify task
         data = InputSchema.model_validate(job["input"])
@@ -60,7 +65,7 @@ def run_inference(job):
             print("--- Generation complete | Uploading audio... ---")
 
             # Upload generated audio to storage
-            storage_ids = [upload_audio(wav, sr) for wav in wavs]
+            storage_ids = [upload_audio(client, wav, sr) for wav in wavs]
             print(f"--- Finished | Storage IDs: {storage_ids} ---")
 
             return {"storage_ids": storage_ids}
@@ -78,7 +83,7 @@ def run_inference(job):
             )
 
             # Upload prompt items to storage
-            storage_ids = [upload_prompt_item(pt) for pt in prompt_items]
+            storage_ids = [upload_prompt_item(client, pt) for pt in prompt_items]
             print(f"--- Finished | Storage IDs: {storage_ids} ---")
 
             return {"storage_ids": storage_ids}
