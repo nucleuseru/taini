@@ -1,11 +1,9 @@
-name: Build and Push Whisper
+name: Build and SgLang Diffusion
 
 on:
   push:
     branches:
       - main
-    paths:
-      - "packages/whisper/**"
   workflow_dispatch:
 
 jobs:
@@ -30,11 +28,10 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
-          context: ./packages/whisper
-          file: ./packages/whisper/Dockerfile
+          context: .
+          file: ./Dockerfile.sglang
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/whisper:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/whisper:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/sglang-diffusion:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

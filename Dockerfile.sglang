@@ -1,0 +1,7 @@
+FROM lmsysorg/sglang:dev
+
+RUN pip install --upgrade pip
+RUN pip install uv
+RUN uv pip install "sglang[diffusion]" --prerelease=allow
+
+CMD ["ping", "-t", "127.0.0.1"]
