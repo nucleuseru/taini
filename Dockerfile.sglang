@@ -1,14 +1,10 @@
 FROM lmsysorg/sglang:dev
 
-RUN pip install --upgrade pip
-RUN pip install uv
-
 WORKDIR /app
 
 RUN uv venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-RUN uv pip install "sglang[diffusion]" --prerelease=allow
-
-CMD ["ping", "-t", "127.0.0.1"]
+RUN uv pip install "sglang[diffusion]" --prerelease=allow && \
+    uv pip install bitsandbytes
