@@ -1,10 +1,13 @@
-FROM lmsysorg/sglang:dev
+FROM nvidia/cuda:13.0.0-runtime-ubuntu24.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends git python3-pip python3-dev build-essential \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-RUN uv venv /app/.venv
+RUN pip install --no-cache-dir uv && \
+    uv venv /app/.venv
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-RUN uv pip install "sglang[diffusion]" --prerelease=allow && \
-    uv pip install bitsandbytes
+RUN uv pip install --no-cache-dir "sglang[diffusion]" bitsandbytes --prerelease=allow
